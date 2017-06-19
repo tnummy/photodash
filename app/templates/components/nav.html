@@ -21,6 +21,12 @@
             <li><a href="">Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i></a></li>
             <li><a href="">Public <i class="fa fa-eye" aria-hidden="true"></i></a></li>
             <li><a href="">Deleted <i class="fa fa-trash-o" aria-hidden="true"></i></a></li>
+            {% if session['id'] == 1%}
+            <li role="separator" class="divider"></li>
+            <li><a href="/create-folder">Create Folder</a></li>
+            <li><a href="/generate-register">Generate Register URL</a></li>
+            <li><a href="/uploadimages">Upload Images</a></li>
+            {% endif %}
           </ul>
         </li>
         {% if session['id'] == 1%}

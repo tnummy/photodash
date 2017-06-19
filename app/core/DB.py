@@ -46,7 +46,7 @@ class DB(object):
         return count[0]
 
     def checkHasFeatureImageByFolderId(self, folder_id):
-        query = "SELECT COUNT(*) FROM images i WHERE i.featured = 1 AND i.folder_id = %s"
+        query = "SELECT COUNT(*) FROM images i WHERE i.featured = 1 AND i.folder_id = %s AND i.deleted = 0"
         values = (folder_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -319,6 +319,15 @@ class DB(object):
     def setFeatureImageByFolderId(self, image_id, folder_id):
         self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s"
+        values = (image_id, folder_id)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def setEditedTagByImageId(self, image_id, folder_id):
+        self.clearFeatureImageByFolderId(folder_id)
+        query = "UPDATE images i SET i.edited = 1 WHERE i.image_id = %s AND i.folder_id = %s"
         values = (image_id, folder_id)
         db = mysql.get_db()
         cursor = db.cursor()
