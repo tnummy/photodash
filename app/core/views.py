@@ -1,0 +1,347 @@
+from flask import Blueprint, request, render_template, flash, g, session, redirect, url_for, \
+                  abort, jsonify
+from app.core.repository import *
+from app.core.models.user import User
+from app.core.DB import DB
+from app import *
+from app.core.files import File
+from functools import wraps
+
+import requests
+
+mod = Blueprint('core', __name__)
+
+# def login_required(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         if not session.get('active'):
+#             return redirect(url_for('core/signin', next=request.url))
+#         return f(*args, **kwargs)
+#     return decorated_function
+
+
+@mod.route('/')
+# @login_required
+def index(message=None, type='info'):
+    if session.get('active'):
+        repository = Repository()
+        action = DB()
+        folders = action.getFoldersByUserId(session['id'])
+        foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
+        return (render_template('core/index.html', mainFolder=session['folder'],folders=folders, foldersFeatures=foldersFeatures, active=False))
+    else:
+        if message:
+            flash(message, type)
+        return render_template('core/signin.html')
+
+
+@mod.route('/album')
+@mod.route('/album/<album>')
+@mod.route('/album/<album>/<image_id>')
+@mod.route('/<user_id>/album/<album>/<image_id>')
+def folder(user_id=None, album=None, image_id=None):
+    if session.get('active'):
+        action = DB()
+        if album:
+            user_id = session['id']
+            hideFolders = True
+            zoomImage = False
+            active = str(album)
+            images = False
+            nextImage = False
+            previousImage = False
+            showFeatureFlag = False
+            if album == 'starred':
+                albumName = 'Starred'
+                images = action.getStarredImagesByUserID(user_id)
+            elif album == 'toedit':
+                albumName = 'To Edit'
+                images = action.getToEditImagesByUserID(user_id)
+            elif album == 'edited':
+                albumName = 'Edited'
+                images = action.getEditedImagesByUserID(user_id)
+            elif album == 'public':
+                albumName = 'Public'
+                images = action.getPublicImagesByUserID(user_id)
+            elif album == 'deleted':
+                albumName = 'Deleted'
+                images = action.getDeletedImagesByUserID(user_id)
+            elif album:
+                active = int(album)
+                showFeatureFlag = True
+                albumName = action.getFoldersLabelByID(album)
+                images = action.getImagesByFolderId(album)
+            if image_id:
+                zoomImage = action.getImageByImageAndUserId(image_id, user_id)
+                if images:
+                    imageLocation = images.index(zoomImage)
+                    if imageLocation == len(images) - 1:
+                        nextImage = False
+                    else:
+                        nextImage = action.getImageByImageAndUserId(images[imageLocation + 1][1], user_id)
+                    if imageLocation == 0:
+                        previousImage = False
+                    else:
+                        previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
+            return (render_template('core/index.html', showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, folders=session['folders'], images=images, active=active))
+    return index('You must be signed in to see this page', 'warning')
+
+
+@mod.route('/profile')
+def profile():
+    return (render_template('core/cover.html'))
+
+
+@mod.route('/feature', methods=['POST'])
+def feature():
+    if request.method == 'POST':
+        action = DB()
+        action.setFeatureImageByFolderId(request.form['inputImage'], request.form['inputAlbum'])
+        flash('Image marked as album feature image.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/star', methods=['POST'])
+def star():
+    if request.method == 'POST':
+        action = DB()
+        action.starImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image starred.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/to-edit', methods=['POST'])
+def toEdit():
+    if request.method == 'POST':
+        action = DB()
+        action.toEditImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image marked to be edited.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/share', methods=['POST'])
+def share():
+    if request.method == 'POST':
+        action = DB()
+        action.shareImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image added to public album.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/delete', methods=['POST'])
+def delete():
+    if request.method == 'POST':
+        action = DB()
+        action.deleteImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image deleted.', 'warning')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+
+@mod.route('/unstar', methods=['POST'])
+def unstar():
+    if request.method == 'POST':
+        action = DB()
+        action.unstarImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image unstarred.', 'warning')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/un-to-edit', methods=['POST'])
+def unToEdit():
+    if request.method == 'POST':
+        action = DB()
+        action.unToEditImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image removed from \"to be edited\".', 'warning')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/unshare', methods=['POST'])
+def unshare():
+    if request.method == 'POST':
+        action = DB()
+        action.unshareImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image removed from public album.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+@mod.route('/undelete', methods=['POST'])
+def undelete():
+    if request.method == 'POST':
+        action = DB()
+        action.undeleteImageByImageId(request.form['inputImage'], session['id'])
+        flash('Image restored.', 'success')
+        if request.form['inputZoom'] == str(1):
+            return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
+        return redirect('/album/'+request.form['inputAlbum'])
+    return redirect('/')
+
+
+@mod.route('/uploadimages')
+def uploadimages():
+    action = DB()
+    users = action.getUserWithFolderList()
+    return render_template('core/uploadimage.html', users=users, folders=session['folders'], active='uploadImages')
+
+@mod.route('/upload', methods=['POST'])
+def upload():
+    if request.method == 'POST':
+        image_files = request.files.getlist('images')
+        for image_file in image_files:
+            try:
+                action = DB()
+                if image_file and allowed_file(image_file.filename):
+                    folder_id = request.form['inputFolder']
+                    user_id = action.getUserIdByFolderId(folder_id)
+                    user_folder = action.getUserFolderByFolderId(folder_id)
+                    File().saveImage(image_file, folder_id, user_id, user_folder)
+            except:
+                flash(image_file.filename + ' is an invalid file type.', 'danger')
+    return redirect('/uploadimages')
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[-1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            ziph.write(os.path.join(root, file))
+
+@mod.route('/generate-register')
+def generateRegister():
+    return render_template('core/generate.html', active='generateRegister', folders=session['folders'])
+
+
+@mod.route('/generate-register-action', methods=['POST'])
+def generateRegisterAction():
+    if request.method == 'POST':
+        string = request.form['inputString']
+        action = DB()
+        hash = action.createToken(string)
+        flash('photos.timnummyphotography.com/register/' + hash, 'success')
+    return render_template('core/generate.html')
+
+
+@mod.route('/create-folder')
+def createFolder():
+    action = DB()
+    users = action.getUserList()
+    return render_template('core/createfolder.html', users=users, active='createFolder', folders=session['folders'])
+
+
+@mod.route('/settings')
+def settings():
+    return render_template('core/settings.html', active='settings', folders=session['folders'])
+
+
+@mod.route('/create-folder-action', methods=['POST'])
+def createFolderAction():
+    if request.method == 'POST' and session.get('active'):
+        string = request.form['inputFolderName']
+        action = DB()
+        if request.form['inputUser']:
+            user_id = request.form['inputUser']
+        else:
+            user_id = session['id']
+        action.createFolder(user_id, string)
+        flash('Folder created', 'success')
+    return redirect('/')
+
+
+@mod.route('/signin')
+def signin():
+    if session.get('active'):
+        signout()
+    return (render_template('core/signin.html'))
+
+
+@mod.route('/signin-action', methods=['POST'])
+def signinAction(email=None, password=None):
+    if request.method == 'POST' or (email and password):
+        action = DB()
+        email = request.form['inputEmail']
+        password = request.form['inputPassword']
+        if action.validateCreds(email, password):
+            session['active'] = True
+            userInfo = action.getUserInfoByEmail(email)
+            user = User(userInfo[0], userInfo[1], userInfo[2])
+            session['first'] = user.first
+            session['last'] = user.last
+            session['email'] = user.email
+            session['folder'] = user.folder
+            user_id = action.getUserIdByEmail(email)
+            session['folders'] = action.getFoldersByUserId(user_id)
+            session['id'] = user_id
+            action.recordLogin(user_id)
+        else:
+            flash('Email and password don\'t match', 'danger')
+            return render_template('core/signin.html')
+    return redirect('/')
+
+
+@mod.route('/signout')
+def signout():
+    session.clear()
+    flash('Signed out, see you next time!', 'success')
+    return redirect('/')
+
+
+@mod.route('/register')
+@mod.route('/register/<hash>')
+def register(hash=None):
+    if session.get('active'):
+        return redirect('/')
+    if not hash:
+        flash('Open registration isn\'t allowed. Please contact Tim for a register link', 'info')
+        return redirect('/signin')
+    return (render_template('core/register.html', hash=hash))
+
+
+@mod.route('/register-action', methods=['POST'])
+def registerAction():
+    if request.method == 'POST':
+        action = DB()
+        first = request.form['inputFirstName']
+        last = request.form['inputLastName']
+        email = request.form['inputEmail']
+        password = request.form['inputPassword']
+        confirmPassword = request.form['confirmPassword']
+        hash = request.form['inputHash']
+        if not action.checkHash(hash):
+            flash('Register link is no longer valid', 'danger')
+            return render_template('core/register.html')
+        if action.checkUserExists(email):
+            flash('Email already used. Did you mean to log in?', 'danger')
+            return render_template('core/register.html')
+        if password != confirmPassword:
+            flash('Passwords don\'t match', 'danger')
+            return render_template('core/register.html')
+        if len(password) < 6:
+            flash('Password too short', 'danger')
+            return render_template('core/register.html')
+        registrant = User(first, last, email, password)
+        action.createUser(registrant)
+        action.voidHash(hash)
+        signinAction(email, password)
+    return redirect('/')
+
+
+

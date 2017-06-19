@@ -1,0 +1,336 @@
+{% extends "layout.html" %}
+{% block body %}
+{% include "components/sidebar.html" %}
+      <div class="row">
+        <div class="col-sm-6 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% if not hideFolders %}
+          <h4 class="page-header">Albums</h4>
+            {% elif not zoomImage and albumName %}
+          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{albumName}}</h4>
+          {% elif zoomImage and albumName %}
+          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small><a href="/album/{{active}}"> {{albumName}}</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{zoomImage[1]}}</h4>
+            {% endif %}
+          <div class="row placeholders">
+            {% if not hideFolders %}
+            {% for folder in foldersFeatures: %}
+              <div class="col-xs-6 col-sm-3 placeholder">
+                  <a href="/album/{{folder[0]}}">
+                    <img src="{{ url_for('static', filename='storage/' + mainFolder + '/' + folder[2] ) }}" width="200" height="200" class="img-responsive" alt="Album thumbnail">
+                    <h4>{{ folder[1] }}</h4>
+                {% if session['id'] == 1%}
+                  </a><a href=""><i class="fa fa-cog" aria-hidden="true"></i></a>
+                  <span class="text-muted">Something else</span>
+                {% endif %}
+              </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if zoomImage %}
+            <div class="row">
+            <div class="col-xs-1"></div>
+              {%if previousImage %}
+              <a href="/album/{{active}}/{{previousImage[1]}}" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-chevron-left" aria-hidden="true"></i></h2></a>
+              {%endif%}
+            {% if not zoomImage[5] %}
+              {% if showFeatureFlag %}
+                <form action="/feature" method="post">
+                <input type="hidden" name="inputImage" value="{{zoomImage[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="1">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-flag{% if not zoomImage[7] %}-o{% endif %}" aria-hidden="true"></i></h2></button>
+                </form>
+                {% endif %}
+              <!--<h3 style="float:left;margin-right:10px;">Actions:</h3>-->
+                <form action="/{% if zoomImage[2] %}un{% endif %}star" method="post">
+                <input type="hidden" name="inputImage" value="{{zoomImage[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="1">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-star{% if not zoomImage[2] %}-o{% endif %}" aria-hidden="true"></i></h2></button>
+                </form>
+                <form action="/{% if zoomImage[3] %}un-{% endif %}to-edit" method="post">
+                <input type="hidden" name="inputImage" value="{{zoomImage[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="1">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-pencil{% if zoomImage[3] %}-square-o{% endif %}" aria-hidden="true"></i></h2></button>
+                </form>
+                <form action="/{% if zoomImage[4] %}un{% endif %}share" method="post">
+                <input type="hidden" name="inputImage" value="{{zoomImage[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="1">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-eye{% if not zoomImage[4] %}-slash{% endif %}" aria-hidden="true"></i></h2></button>
+                </form>
+                {% endif %}
+                <form action="/{% if zoomImage[5] %}un{% endif %}delete" method="post">
+                <input type="hidden" name="inputImage" value="{{zoomImage[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="1">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa{% if zoomImage[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></h2></button>
+                </form>
+                {% if not zoomImage[5] %}
+                <a href="{{  url_for('static', filename=zoomImage[0] + '/' + zoomImage[1]  )}}" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-download" aria-hidden="true"></i></h2></a>
+                {% endif %}
+                {% if nextImage %}
+                <a href="/album/{{active}}/{{nextImage[1]}}" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-chevron-right" aria-hidden="true"></i></h2></a>
+              {% endif %}
+              </div>
+             <div class="row">
+                <img src="{{  url_for('static', filename=zoomImage[0] + '/mid_' + zoomImage[1]  )}}" class="img-responsive"
+              style="
+              " alt="Image thumbnail"></a>
+
+              <h4 style="float:left;margin-right:10px;">*full-size resolution: {{zoomImage[6]}}</h4>
+            </div>
+
+
+            {% else %}
+            {% for image in images: %}
+
+              <div class="col-xs-2 col-sm-4 col-md-2" style="height:185px; width:185px; padding:5px; margin-bottom:20px;">
+                <div>
+              <a href="/album/{{active}}/{{image[1]}}">
+                <img src="{{  url_for('static', filename=image[0] + '/thumb_' + image[1]  )}}" class="img-responsive"
+              style="
+              " alt="Image thumbnail"></a>
+
+</div>
+                {% if not image[5] %}
+                {% if showFeatureFlag %}
+                <form action="/feature" method="post">
+                <input type="hidden" name="inputImage" value="{{image[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="0">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-flag{% if not image[7] %}-o{% endif %}" aria-hidden="true"></i></button>
+                </form>
+                {% endif %}
+                <form action="/{% if image[2] %}un{% endif %}star" method="post">
+                <input type="hidden" name="inputImage" value="{{image[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="0">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-star{% if not image[2] %}-o{% endif %}" aria-hidden="true"></i></button>
+                </form>
+                <form action="/{% if image[3] %}un-{% endif %}to-edit" method="post">
+                <input type="hidden" name="inputImage" value="{{image[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="0">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-pencil{% if image[3] %}-square-o{% endif %}" aria-hidden="true"></i></button>
+                </form>
+                <form action="/{% if image[4] %}un{% endif %}share" method="post">
+                <input type="hidden" name="inputImage" value="{{image[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="0">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-eye{% if not image[4] %}-slash{% endif %}" aria-hidden="true"></i></button>
+                </form>
+                {% endif %}
+                <form action="/{% if image[5] %}un{% endif %}delete" method="post">
+                <input type="hidden" name="inputImage" value="{{image[1]}}">
+                <input type="hidden" name="inputAlbum" value="{{active}}">
+                <input type="hidden" name="inputZoom" value="0">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa{% if image[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></button>
+                </form>
+                {% if not image[5] %}
+                <a href="{{  url_for('static', filename=image[0] + '/' + image[1]  )}}" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-download" aria-hidden="true"></i></a>
+                {% endif %}
+              </div>
+            {% endfor %}
+            {% endif %}
+{% if 1 == 0 %}
+                        <!--<li><a href="">Starred <i class="fa fa-star-o" aria-hidden="true"></i></a></li>-->
+            <!--<li><a href="">To Edit <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-square-o" aria-hidden="true"></i></a></li>-->
+            <!--<li><a href="">Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i></a></li>-->
+            <!--<li><a href="">Public <i class="fa fa-eye" aria-hidden="true"></i></a></li>-->
+            <!--<li><a href="">Deleted <i class="fa fa-trash-o" aria-hidden="true"></i></a></li>-->
+
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            <!--<div class="col-xs-6 col-sm-3 placeholder">-->
+              <!--<img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">-->
+              <!--<h4>Label</h4>-->
+              <!--<span class="text-muted">Something else</span>-->
+            <!--</div>-->
+            {%endif%}
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% if 1 == 0 %}
+          <!--<h2 class="sub-header">Section title</h2>-->
+          <!--<div class="table-responsive">-->
+            <!--<table class="table table-striped">-->
+              <!--<thead>-->
+                <!--<tr>-->
+                  <!--<th>#</th>-->
+                  <!--<th>Header</th>-->
+                  <!--<th>Header</th>-->
+                  <!--<th>Header</th>-->
+                  <!--<th>Header</th>-->
+                <!--</tr>-->
+              <!--</thead>-->
+              <!--<tbody>-->
+                <!--<tr>-->
+                  <!--<td>1,001</td>-->
+                  <!--<td>Lorem</td>-->
+                  <!--<td>ipsum</td>-->
+                  <!--<td>dolor</td>-->
+                  <!--<td>sit</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,002</td>-->
+                  <!--<td>amet</td>-->
+                  <!--<td>consectetur</td>-->
+                  <!--<td>adipiscing</td>-->
+                  <!--<td>elit</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,003</td>-->
+                  <!--<td>Integer</td>-->
+                  <!--<td>nec</td>-->
+                  <!--<td>odio</td>-->
+                  <!--<td>Praesent</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,003</td>-->
+                  <!--<td>libero</td>-->
+                  <!--<td>Sed</td>-->
+                  <!--<td>cursus</td>-->
+                  <!--<td>ante</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,004</td>-->
+                  <!--<td>dapibus</td>-->
+                  <!--<td>diam</td>-->
+                  <!--<td>Sed</td>-->
+                  <!--<td>nisi</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,005</td>-->
+                  <!--<td>Nulla</td>-->
+                  <!--<td>quis</td>-->
+                  <!--<td>sem</td>-->
+                  <!--<td>at</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,006</td>-->
+                  <!--<td>nibh</td>-->
+                  <!--<td>elementum</td>-->
+                  <!--<td>imperdiet</td>-->
+                  <!--<td>Duis</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,007</td>-->
+                  <!--<td>sagittis</td>-->
+                  <!--<td>ipsum</td>-->
+                  <!--<td>Praesent</td>-->
+                  <!--<td>mauris</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,008</td>-->
+                  <!--<td>Fusce</td>-->
+                  <!--<td>nec</td>-->
+                  <!--<td>tellus</td>-->
+                  <!--<td>sed</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,009</td>-->
+                  <!--<td>augue</td>-->
+                  <!--<td>semper</td>-->
+                  <!--<td>porta</td>-->
+                  <!--<td>Mauris</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,010</td>-->
+                  <!--<td>massa</td>-->
+                  <!--<td>Vestibulum</td>-->
+                  <!--<td>lacinia</td>-->
+                  <!--<td>arcu</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,011</td>-->
+                  <!--<td>eget</td>-->
+                  <!--<td>nulla</td>-->
+                  <!--<td>Class</td>-->
+                  <!--<td>aptent</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,012</td>-->
+                  <!--<td>taciti</td>-->
+                  <!--<td>sociosqu</td>-->
+                  <!--<td>ad</td>-->
+                  <!--<td>litora</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,013</td>-->
+                  <!--<td>torquent</td>-->
+                  <!--<td>per</td>-->
+                  <!--<td>conubia</td>-->
+                  <!--<td>nostra</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,014</td>-->
+                  <!--<td>per</td>-->
+                  <!--<td>inceptos</td>-->
+                  <!--<td>himenaeos</td>-->
+                  <!--<td>Curabitur</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td>1,015</td>-->
+                  <!--<td>sodales</td>-->
+                  <!--<td>ligula</td>-->
+                  <!--<td>in</td>-->
+                  <!--<td>libero</td>-->
+                <!--</tr>-->
+              <!--</tbody>-->
+            <!--</table>-->
+          <!--</div>-->
+{% endif %}

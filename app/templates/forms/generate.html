@@ -1,0 +1,13 @@
+<div class="col-sm-3 col-md-4"></div>
+<div class="col-sm-6 col-md-4">
+    {% if session['id'] == 1 %}
+    <form class="form-signin" action="/generate-register-action" method="post">
+        </br>
+        <label for="inputString" class="sr-only">String to hash</label>
+        <input type="text" name="inputString" id="inputString" class="form-control" placeholder="String" required autofocus>
+        </br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Generate</button>
+        </br>
+    </form>
+    {% endif %}
+</div>

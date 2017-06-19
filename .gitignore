@@ -3,6 +3,18 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#custom
+.DS_Store
+.idea/
+bin/
+include/
+tmp/
+passenger_wsgi.py
+pip-selfcheck.json
+app/static/storage/
+app/static/storage/.DS_Store
+app/config.py
+
 # C extensions
 *.so
 

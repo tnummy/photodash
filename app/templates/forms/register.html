@@ -1,0 +1,23 @@
+<div class="col-sm-3 col-md-4"></div>
+<div class="col-sm-6 col-md-4">
+    <form class="form-signin" action="/register-action" method="post">
+        <h4 class="form-signin-heading">Register here</h4>
+        <input type="text" name="inputFirstName" name="inputFirstName" class="form-control" placeholder="First Name" required autofocus>
+        </br>
+        <input type="text" name="inputLastName" class="form-control" placeholder="Last Name" required>
+        </br>
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input type="email" name="inputEmail" id="inputEmail" class="form-control" placeholder="Email address" required>
+        </br>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password (at least 6 characters)" required>
+        </br>
+        <label for="confirmPassword" class="sr-only">Confirm Password</label>
+        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="Confirm Password" required>
+        <input type="hidden" name="inputHash" id="inputHash" class="form-control" value="{{ hash }}" required>
+        </br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+        </br>
+        <a href="/signin">already registered?</a>
+    </form>
+</div>

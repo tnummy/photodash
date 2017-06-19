@@ -1,0 +1,23 @@
+<div class="col-sm-3 col-md-4"></div>
+<div class="col-sm-6 col-md-4">
+    {% if session['id'] == 1 %}
+    <form class="form-signin" action="/create-folder-action" method="post">
+        {% if session['id'] == 1 %}
+        </br>
+          <label for="inputUser">Create subfolder for another user:</label>
+          <select class="form-control" id="inputUser" name="inputUser">
+            <option value="0">Self</option>
+              {% for user in users %}
+                <option value="{{ user[0] }}">{{user[1] + " " + user[2]}}</option>
+              {% endfor %}
+          </select>
+        {% endif %}
+        </br>
+        <label for="inputFolderName" class="sr-only">String to hash</label>
+        <input type="text" name="inputFolderName" id="inputFolderName" class="form-control" placeholder="Folder Name" required autofocus>
+        </br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Create Folder</button>
+        </br>
+    </form>
+    {% endif %}
+</div>

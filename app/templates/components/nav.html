@@ -1,0 +1,40 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Tim Nummy Photography</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav navbar-right">
+        {% if session['active']: %}
+        <li><a href="/profile">Hello, {{ session['first'] }}!</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Tags <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="">Starred <i class="fa fa-star-o" aria-hidden="true"></i></a></li>
+            <li><a href="">To Edit <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-square-o" aria-hidden="true"></i></a></li>
+            <li><a href="">Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i></a></li>
+            <li><a href="">Public <i class="fa fa-eye" aria-hidden="true"></i></a></li>
+            <li><a href="">Deleted <i class="fa fa-trash-o" aria-hidden="true"></i></a></li>
+          </ul>
+        </li>
+        {% if session['id'] == 1%}
+        <li><a href="/profile">Profile <i class="fa fa-user" aria-hidden="true"></i></a></li>
+        {% endif %}
+        <li><a href="/signout">Sign Out <i class="fa fa-sign-out" aria-hidden="true"></i></a></li>
+        {% endif %}
+        {% if not session['active']: %}
+        <li><a href="/signin">Sign In <i class="fa fa-sign-in" aria-hidden="true"></i></a></li>
+        {% endif %}
+      </ul>
+      <!--<form class="navbar-form navbar-right">-->
+        <!--<input type="text" class="form-control" placeholder="Search...">-->
+      <!--</form>-->
+    </div>
+  </div>
+</nav>

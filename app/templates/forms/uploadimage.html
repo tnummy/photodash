@@ -1,0 +1,20 @@
+<div class="col-sm-3 col-md-4"></div>
+<div class="col-sm-6 col-md-4">
+    {% if session['id'] == 1 %}
+    <form class="form-signin" action="/upload" method="post" enctype="multipart/form-data">
+        </br>
+          <label for="inputFolder">User and Folder:</label>
+          <select class="form-control" id="inputFolder" name="inputFolder">
+            <option>select</option>
+              {% for user in users %}
+                <option value="{{ user[3] }}">{{user[1] + " " + user[2] + " - " + user[4]}}</option>
+              {% endfor %}
+          </select>
+        </br>
+        <input type="file" name="images" id="images" class="form-control" required autofocus multiple>
+        </br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Upload</button>
+        </br>
+    </form>
+    {% endif %}
+</div>
