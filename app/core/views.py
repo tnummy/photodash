@@ -211,8 +211,8 @@ def upload():
                     user_id = action.getUserIdByFolderId(folder_id)
                     user_folder = action.getUserFolderByFolderId(folder_id)
                     File().saveImage(image_file, folder_id, user_id, user_folder, request.form['inputEditTag'])
-            except:
-                flash(image_file.filename + ' is an invalid file type.', 'danger')
+            except Exception as e:
+                flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
     return redirect('/uploadimages')
 
 def allowed_file(filename):
