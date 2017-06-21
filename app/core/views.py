@@ -247,6 +247,21 @@ def createFolder():
     return render_template('core/createfolder.html', users=users, active='createFolder', folders=session['folders'])
 
 
+@mod.route('/user-list', methods=['GET'])
+def userList():
+    action = DB()
+    users = action.getUserList()
+    return render_template('core/user-list.html', users=users, active='userList', folders=session['folders'], showpassword=request.args.get('password'))
+
+
+@mod.route('/delete-user', methods=['POST'])
+def deleteUser():
+    if request.method == 'POST' and session.get('id') == 1:
+        action = DB()
+        action.deleteUserById(request.form['inputUserId'])
+        return redirect('/user-list')
+
+
 @mod.route('/settings')
 def settings():
     return render_template('core/settings.html', active='settings', folders=session['folders'])

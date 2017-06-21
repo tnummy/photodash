@@ -70,7 +70,7 @@ class DB(object):
         return results
 
     def getUserList(self):
-        query = "SELECT user_id, first, last FROM users u WHERE u.admin = 0 AND u.deleted = 0"
+        query = "SELECT user_id, first, last, email, password, created FROM users u WHERE u.admin = 0 AND u.deleted = 0"
         cursor = self.getCursor()
         cursor.execute(query)
         results = cursor.fetchall()
@@ -239,6 +239,14 @@ class DB(object):
     def voidHash(self, hash):
         query = "UPDATE access_tokens at SET at.used = 1 WHERE at.token = %s"
         values = (hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def deleteUserById(self, user_id):
+        query = "UPDATE user u SET u.deleted = 1 WHERE u.user_id = %s"
+        values = (user_id,)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
