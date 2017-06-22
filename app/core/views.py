@@ -58,7 +58,8 @@ def folder(user_id=None, album=None, image_id=None):
             nextImage = False
             previousImage = False
             showFeatureFlag = False
-            # action.logAction(user_id, app.config['ACTIVITY_FOLDER_VIEW'], image_id=None, folder_id=album)
+            if not image_id:
+                action.logAction(user_id, app.config['ACTIVITY_FOLDER_VIEW'], image_id=None, folder_id=album)
             tagCounts = {}
             tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
             tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
