@@ -6,7 +6,7 @@ import hashlib
 class DB(object):
 
     def getCursor(self):
-        db = mysql.get_db()
+        db = app.mysql.get_db()
         return db.cursor()
 
     def createUser(self, registrant):
