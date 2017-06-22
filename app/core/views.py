@@ -225,9 +225,9 @@ def upload():
                     folder_id = request.form['inputFolder']
                     user_id = action.getUserIdByFolderId(folder_id)
                     user_folder = action.getUserFolderByFolderId(folder_id)
-                    File().saveImage(image_file, folder_id, user_id, user_folder)
-            except:
-                flash(image_file.filename + ' is an invalid file type.', 'danger')
+                    File().saveImage(image_file, folder_id, user_id, user_folder, request.form['inputEditTag'])
+            except Exception as e:
+                flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
     return redirect('/uploadimages')
 
 def allowed_file(filename):
@@ -268,6 +268,21 @@ def emptyTrash():
     action = DB()
     action.emptyTrashByUserId(session['id'])
     return redirect('/')
+
+@mod.route('/user-list', methods=['GET'])
+def userList():
+    action = DB()
+    users = action.getUserList()
+    return render_template('core/user-list.html', users=users, active='userList', folders=session['folders'], showpassword=request.args.get('password'))
+
+
+@mod.route('/delete-user', methods=['POST'])
+def deleteUser():
+    if request.method == 'POST' and session.get('id') == 1:
+        action = DB()
+        action.deleteUserById(request.form['inputUserId'])
+        return redirect('/user-list')
+
 
 
 @mod.route('/settings')
