@@ -11,6 +11,13 @@
               {% endfor %}
           </select>
         </br>
+          <label for="inputFolder">Add Edit Tag:</label>
+          <select class="form-control" id="inputEditTag" name="inputEditTag">
+            <option>select</option>
+                <option value="0">Raw</option>
+                <option value="1">Edited</option>
+          </select>
+        </br>
         <input type="file" name="images" id="images" class="form-control" required autofocus multiple>
         </br>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Upload</button>

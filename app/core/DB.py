@@ -46,7 +46,7 @@ class DB(object):
         return count[0]
 
     def checkHasFeatureImageByFolderId(self, folder_id):
-        query = "SELECT COUNT(*) FROM images i WHERE i.featured = 1 AND i.folder_id = %s"
+        query = "SELECT COUNT(*) FROM images i WHERE i.featured = 1 AND i.folder_id = %s AND i.deleted = 0"
         values = (folder_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -70,7 +70,7 @@ class DB(object):
         return results
 
     def getUserList(self):
-        query = "SELECT user_id, first, last FROM users u WHERE u.admin = 0 AND u.deleted = 0"
+        query = "SELECT user_id, first, last, email, password, created FROM users u WHERE u.admin = 0 AND u.deleted = 0"
         cursor = self.getCursor()
         cursor.execute(query)
         results = cursor.fetchall()
@@ -317,6 +317,14 @@ class DB(object):
         cursor.execute(query, values)
         db.commit()
 
+    def deleteUserById(self, user_id):
+        query = "UPDATE user u SET u.deleted = 1 WHERE u.user_id = %s"
+        values = (user_id,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
     def deleteImageByImageId(self, image_id, user_id):
         self.logAction(user_id, app.config['ACTIVITY_DELETED'], image_id=image_id)
         query = "UPDATE images i SET i.deleted = 1 WHERE i.image_id = %s AND i.user_id = %s"
@@ -420,6 +428,15 @@ class DB(object):
         self.logAction(user_id, app.config['ACTIVITY_FLAGGED'], image_id=image_id, folder_id=folder_id)
         self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s"
+        values = (image_id, folder_id)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def setEditedTagByImageId(self, image_id, folder_id):
+        self.clearFeatureImageByFolderId(folder_id)
+        query = "UPDATE images i SET i.edited = 1 WHERE i.image_id = %s AND i.folder_id = %s"
         values = (image_id, folder_id)
         db = mysql.get_db()
         cursor = db.cursor()

@@ -18,7 +18,7 @@ class File(object):
         return [x[0].split('/')[-1] for x in os.walk(os.path.join(baseRoot, folder))][1:]
 
 
-    def saveImage(self, image, folder_id, user_id, user_folder):
+    def saveImage(self, image, folder_id, user_id, user_folder, edited):
         baseRoot = app.config['BASE_UPLOAD_FOLDER']
         location = baseRoot + user_folder
         # return os.walk(os.path.join(baseRoot, folder))[1]
@@ -39,6 +39,8 @@ class File(object):
             action.addImage(filename, folder_id, user_id, 'storage/' + user_folder, resolution, possible_duplicate)
             if not action.checkHasFeatureImageByFolderId(folder_id):
                 action.setFeatureImageByFolderId(filename, folder_id)
+            if edited:
+                action.setEditedTagByImageId(filename, folder_id)
             maxsize = app.config['WEBVIEW_SIZE']
             imageObject.thumbnail(maxsize)
             thumbnailFilename = 'mid_' + filename
