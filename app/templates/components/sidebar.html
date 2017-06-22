@@ -4,18 +4,18 @@
       <a href="/">Albums <span class="sr-only">(current)</span></a>
     </li>
     {% for folder in folders: %}
-      <li {% if active==folder[0] %} class="active" {% endif %} ><a href="/album/{{folder[0]}}"><i class="fa fa-folder{% if active==folder[0] %}-open{% endif %}-o" aria-hidden="true"></i> {{ folder[1] }} </a></li>
+      <li {% if active==folder[0] %} class="active" {% endif %} ><a href="/album/{{folder[0]}}"><i class="fa fa-folder{% if active==folder[0] %}-open{% endif %}-o" aria-hidden="true"></i> {{ folder[1] }} ({{folder[2]}}) </a></li>
     {% endfor %}
     <!--<li><a href="#">Deleted</a></li>-->
     <!--<li><a href="#">Export</a></li>-->
   </ul>
   <ul class="nav nav-sidebar">
     <hr>
-    <li {% if active=='starred' %} class="active" {% endif %}><a href="/album/starred"><i class="fa fa-folder{% if active=='starred' %}-open{% endif %}-o" aria-hidden="true"></i> Starred <i class="fa fa-star-o" aria-hidden="true"></i></a></li>
-    <li {% if active=='toedit' %} class="active" {% endif %}><a href="/album/toedit"><i class="fa fa-folder{% if active=='toedit' %}-open{% endif %}-o" aria-hidden="true"></i> To Edit <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-square-o" aria-hidden="true"></i></a></li>
-    <li {% if active=='edited' %} class="active" {% endif %}><a href="/album/edited"><i class="fa fa-folder{% if active=='edited' %}-open{% endif %}-o" aria-hidden="true"></i> Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i></a></li>
-    <li {% if active=='public' %} class="active" {% endif %}><a href="/album/public"><i class="fa fa-folder{% if active=='public' %}-open{% endif %}-o" aria-hidden="true"></i> Public <i class="fa fa-eye" aria-hidden="true"></i></a></li>
-    <li {% if active=='deleted' %} class="active" {% endif %}><a href="/album/deleted"><i class="fa fa-folder{% if active=='deleted' %}-open{% endif %}-o" aria-hidden="true"></i> Deleted <i class="fa fa-trash-o" aria-hidden="true"></i></a></li>
+    <li {% if active=='starred' %} class="active" {% endif %}><a href="/album/starred"><i class="fa fa-folder{% if active=='starred' %}-open{% endif %}-o" aria-hidden="true"></i> Starred <i class="fa fa-star-o" aria-hidden="true"></i> ({{tagCounts['starred']}})</a></li>
+    <li {% if active=='toedit' %} class="active" {% endif %}><a href="/album/toedit"><i class="fa fa-folder{% if active=='toedit' %}-open{% endif %}-o" aria-hidden="true"></i> To Edit <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-square-o" aria-hidden="true"></i> ({{tagCounts['toedit']}})</a></li>
+    <li {% if active=='edited' %} class="active" {% endif %}><a href="/album/edited"><i class="fa fa-folder{% if active=='edited' %}-open{% endif %}-o" aria-hidden="true"></i> Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i> ({{tagCounts['edited']}})</a></li>
+    <li {% if active=='public' %} class="active" {% endif %}><a href="/album/public"><i class="fa fa-folder{% if active=='public' %}-open{% endif %}-o" aria-hidden="true"></i> Public <i class="fa fa-eye" aria-hidden="true"></i> ({{tagCounts['public']}})</a></li>
+    <li {% if active=='deleted' %} class="active" {% endif %}><a href="/album/deleted"><i class="fa fa-folder{% if active=='deleted' %}-open{% endif %}-o" aria-hidden="true"></i> Deleted <i class="fa fa-trash-o" aria-hidden="true"></i> ({{tagCounts['deleted']}})</a></li>
     <!--<li><a href="">One more nav</a></li>-->
     <!--<li><a href="">Another nav item</a></li>-->
     <!--<li><a href="">More navigation</a></li>-->

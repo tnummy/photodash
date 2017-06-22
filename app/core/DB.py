@@ -1,4 +1,4 @@
-from app import mysql
+from app import *
 from flask                    import session
 import hashlib
 
@@ -108,11 +108,13 @@ class DB(object):
         return results[0].split('@')[0]
 
     def getFoldersByUserId(self, id):
-        query = "SELECT folder_id, label FROM folders f WHERE f.user_id = %s AND deleted = 0 ORDER BY folder_order"
+        query = "SELECT f.folder_id, f.label, COUNT(i.image_id) FROM folders f LEFT JOIN images i ON i.folder_id = f.folder_id AND i.deleted = 0 WHERE f.user_id = %s AND f.deleted = 0 GROUP BY f.folder_id ORDER BY folder_order"
         values = (id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
+        # for result in results:
+        #     result.append(self.getImageCountByFolderId(result[0]))
         return results
 
     def getFoldersByUserIdWithFeatureImage(self, id):
@@ -139,6 +141,54 @@ class DB(object):
         count = cursor.fetchone()
         return count[0]
 
+    def getImageCountByFolderId(self, folder_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.folder_id = %s AND i.deleted = 0"
+        values = (folder_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def getStarredImageCountByUserId(self, user_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.user_id = %s AND i.deleted = 0 AND i.starred = 1"
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def getToEditImageCountByUserId(self, user_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.user_id = %s AND i.deleted = 0 AND i.to_edit = 1"
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def getEditedImageCountByUserId(self, user_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.user_id = %s AND i.deleted = 0 AND i.edited = 1"
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def getPublicImageCountByUserId(self, user_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.user_id = %s AND i.deleted = 0 AND i.public = 1"
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def getDeletedImageCountByUserId(self, user_id):
+        query = "SELECT COUNT(*) FROM images i WHERE i.user_id = %s AND i.deleted = 1 AND i.hard_deleted = 0 "
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
     def getImagesByFolderId(self, id):
         query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.folder_id = %s AND deleted = 0 ORDER BY image_id"
         values = (id,)
@@ -148,7 +198,7 @@ class DB(object):
         return results
 
     def getImageByImageAndUserId(self, image_id, user_id):
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.user_id = %s AND image_id = %s"
+        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.user_id = %s AND image_id = %s AND deleted = 0"
         values = (user_id, image_id)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -163,49 +213,72 @@ class DB(object):
         results = cursor.fetchone()
         return results[0]
 
-    def getStarredImagesByUserID(self, id):
+    def getStarredImagesByUserID(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_VIEW_STARRED'])
         query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND starred = 1 AND deleted = 0 ORDER BY image_id"
-        values = (id,)
+        values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
         return results
 
-    def getToEditImagesByUserID(self, id):
+    def getToEditImagesByUserID(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_VIEW_TOEDIT'])
         query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND to_edit = 1 AND deleted = 0 ORDER BY image_id"
-        values = (id,)
+        values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
         return results
 
-    def getEditedImagesByUserID(self, id):
+    def getEditedImagesByUserID(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_VIEW_EDITED'])
         query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND edited = 1 AND deleted = 0 ORDER BY image_id"
-        values = (id,)
+        values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
         return results
 
-    def getPublicImagesByUserID(self, id):
+    def getPublicImagesByUserID(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_VIEW_PUBLIC'])
         query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND public = 1 AND deleted = 0 ORDER BY image_id"
-        values = (id,)
+        values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
         return results
 
-    def getDeletedImagesByUserID(self, id):
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND deleted = 1 ORDER BY image_id"
-        values = (id,)
+    def getDeletedImagesByUserID(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_VIEW_DELETED'])
+        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND deleted = 1 AND hard_deleted = 0 ORDER BY image_id"
+        values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchall()
+        return results
+
+    def getActivityIdByKeyword(self, keyword):
+        query = "SELECT activity_id FROM activity a WHERE a.activity_keyword = %s AND deleted = 0"
+        values = (keyword,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
         return results
 
     def recordLogin(self, user_id):
-        query = ("INSERT INTO login_history (user_id) \
-                      VALUES (%s)")
+        query = ("INSERT INTO login_history (user_id, login) \
+                      VALUES (%s, 1)")
+        values = (user_id,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+
+    def recordLogout(self, user_id):
+        query = ("INSERT INTO login_history (user_id, logout) \
+                      VALUES (%s, 1)")
         values = (user_id,)
         db = mysql.get_db()
         cursor = db.cursor()
@@ -245,6 +318,7 @@ class DB(object):
         db.commit()
 
     def deleteImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_DELETED'], image_id=image_id)
         query = "UPDATE images i SET i.deleted = 1 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -253,6 +327,7 @@ class DB(object):
         db.commit()
 
     def undeleteImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_UNDELETED'], image_id=image_id)
         query = "UPDATE images i SET i.deleted = 0 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -260,7 +335,27 @@ class DB(object):
         cursor.execute(query, values)
         db.commit()
 
+    def logAction(self, user_id, action_keyword, image_id=None, folder_id=None):
+        query = ("INSERT INTO activity_history (user_id, action, image_id, folder_id) \
+                      VALUES (%s, %s, %s, %s)")
+        action = self.getActivityIdByKeyword(action_keyword)
+        values = (user_id, action, image_id, folder_id)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def emptyTrashByUserId(self, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_EMPTY_TRASH'])
+        query = "UPDATE images i SET i.hard_deleted = 1 WHERE i.user_id = %s AND i.deleted = 1"
+        values = (user_id,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
     def starImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_STARRED'], image_id=image_id)
         query = "UPDATE images i SET i.starred = 1 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -269,6 +364,7 @@ class DB(object):
         db.commit()
 
     def unstarImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_UNSTARRED'], image_id=image_id)
         query = "UPDATE images i SET i.starred = 0 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -277,6 +373,7 @@ class DB(object):
         db.commit()
 
     def toEditImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_TOEDIT'], image_id=image_id)
         query = "UPDATE images i SET i.to_edit = 1 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -285,6 +382,7 @@ class DB(object):
         db.commit()
 
     def unToEditImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_UNTOEDIT'], image_id=image_id)
         query = "UPDATE images i SET i.to_edit = 0 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -293,6 +391,7 @@ class DB(object):
         db.commit()
 
     def shareImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_SHARED'], image_id=image_id)
         query = "UPDATE images i SET i.public = 1 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -301,6 +400,7 @@ class DB(object):
         db.commit()
 
     def unshareImageByImageId(self, image_id, user_id):
+        self.logAction(user_id, app.config['ACTIVITY_UNSHARED'], image_id=image_id)
         query = "UPDATE images i SET i.public = 0 WHERE i.image_id = %s AND i.user_id = %s"
         values = (image_id, user_id)
         db = mysql.get_db()
@@ -316,7 +416,8 @@ class DB(object):
         cursor.execute(query, values)
         db.commit()
 
-    def setFeatureImageByFolderId(self, image_id, folder_id):
+    def setFeatureImageByFolderId(self, user_id, image_id, folder_id):
+        self.logAction(user_id, app.config['ACTIVITY_FLAGGED'], image_id=image_id, folder_id=folder_id)
         self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s"
         values = (image_id, folder_id)

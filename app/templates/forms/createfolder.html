@@ -6,7 +6,7 @@
         </br>
           <label for="inputUser">Create subfolder for another user:</label>
           <select class="form-control" id="inputUser" name="inputUser">
-            <option value="0">Self</option>
+            <option value="{{ session['id'] }}">Self</option>
               {% for user in users %}
                 <option value="{{ user[0] }}">{{user[1] + " " + user[2]}}</option>
               {% endfor %}

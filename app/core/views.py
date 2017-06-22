@@ -28,7 +28,14 @@ def index(message=None, type='info'):
         action = DB()
         folders = action.getFoldersByUserId(session['id'])
         foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
-        return (render_template('core/index.html', mainFolder=session['folder'],folders=folders, foldersFeatures=foldersFeatures, active=False))
+        user_id = session['id']
+        tagCounts = {}
+        tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
+        tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
+        tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
+        tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
+        tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
+        return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=session['folder'],folders=folders, foldersFeatures=foldersFeatures, active=False))
     else:
         if message:
             flash(message, type)
@@ -51,6 +58,13 @@ def folder(user_id=None, album=None, image_id=None):
             nextImage = False
             previousImage = False
             showFeatureFlag = False
+            # action.logAction(user_id, app.config['ACTIVITY_FOLDER_VIEW'], image_id=None, folder_id=album)
+            tagCounts = {}
+            tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
+            tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
+            tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
+            tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
+            tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
             if album == 'starred':
                 albumName = 'Starred'
                 images = action.getStarredImagesByUserID(user_id)
@@ -73,7 +87,8 @@ def folder(user_id=None, album=None, image_id=None):
                 images = action.getImagesByFolderId(album)
             if image_id:
                 zoomImage = action.getImageByImageAndUserId(image_id, user_id)
-                if images:
+                action.logAction(user_id, app.config['ACTIVITY_VIEW_ZOOMED'], image_id, album)
+                if images and zoomImage:
                     imageLocation = images.index(zoomImage)
                     if imageLocation == len(images) - 1:
                         nextImage = False
@@ -83,7 +98,7 @@ def folder(user_id=None, album=None, image_id=None):
                         previousImage = False
                     else:
                         previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
-            return (render_template('core/index.html', showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, folders=session['folders'], images=images, active=active))
+            return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, folders=session['folders'], images=images, active=active))
     return index('You must be signed in to see this page', 'warning')
 
 
@@ -96,7 +111,7 @@ def profile():
 def feature():
     if request.method == 'POST':
         action = DB()
-        action.setFeatureImageByFolderId(request.form['inputImage'], request.form['inputAlbum'])
+        action.setFeatureImageByFolderId(session['id'], request.form['inputImage'], request.form['inputAlbum'])
         flash('Image marked as album feature image.', 'success')
         if request.form['inputZoom'] == str(1):
             return redirect('/album/' + request.form['inputAlbum'] + '/' + request.form['inputImage'])
@@ -244,7 +259,15 @@ def generateRegisterAction():
 def createFolder():
     action = DB()
     users = action.getUserList()
+    session['folder'] = action.getFoldersByUserId(session['id'])
     return render_template('core/createfolder.html', users=users, active='createFolder', folders=session['folders'])
+
+
+@mod.route('/empty-trash')
+def emptyTrash():
+    action = DB()
+    action.emptyTrashByUserId(session['id'])
+    return redirect('/')
 
 
 @mod.route('/settings')
@@ -299,6 +322,8 @@ def signinAction(email=None, password=None):
 
 @mod.route('/signout')
 def signout():
+    action = DB()
+    action.recordLogout(session['id'])
     session.clear()
     flash('Signed out, see you next time!', 'success')
     return redirect('/')
