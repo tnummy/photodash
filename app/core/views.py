@@ -6,6 +6,7 @@ from app.core.DB import DB
 from app import *
 from app.core.files import File
 from functools import wraps
+from datetime import datetime
 
 import requests
 
@@ -19,6 +20,9 @@ mod = Blueprint('core', __name__)
 #         return f(*args, **kwargs)
 #     return decorated_function
 
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow()}
 
 @mod.route('/')
 # @login_required
