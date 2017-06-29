@@ -9,4 +9,5 @@ jobs:
        - run: echo "hello world"
      test:
        override:
+         - "true"
          - echo "no tests"
