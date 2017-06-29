@@ -6,7 +6,7 @@
             {% if not hideFolders %}
           <h4 class="page-header">Albums</h4>
             {% elif not zoomImage and albumName %}
-          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{albumName}}</h4>
+          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{albumName}} <small>{% if active == 'deleted' %}(<a href="/empty-trash">empty trash</a>){% endif %}</small></h4>
           {% elif zoomImage and albumName %}
           <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small><a href="/album/{{active}}"> {{albumName}}</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{zoomImage[1]}}</h4>
             {% endif %}
