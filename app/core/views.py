@@ -21,8 +21,9 @@ mod = Blueprint('core', __name__)
 #     return decorated_function
 
 @app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow()}
+def inject_stuff():
+    return {'now': datetime.utcnow(), 'tagCounts': 0}
+
 
 @mod.route('/')
 # @login_required
@@ -260,6 +261,32 @@ def generateRegisterAction():
     return render_template('core/generate.html')
 
 
+@mod.route('/generate-reset-password')
+def generatePasswordReset():
+    return render_template('core/generateresetpassword.html', active='generatePasswordReset')
+
+
+@mod.route('/generate-reset-password-action', methods=['POST'])
+def generatePasswordResetAction():
+    if request.method == 'POST':
+        string = request.form['inputEmail']
+        action = DB()
+        hash = action.createPasswordResetToken(string)
+        flash('photos.timnummyphotography.com/reset-password/' + hash, 'success')
+    return render_template('core/generateresetpassword.html')
+
+
+@mod.route('/reset-password')
+@mod.route('/reset-password/<hash>')
+def resetPassword(hash=None):
+    if session.get('active'):
+        return redirect('/')
+    if not hash:
+        flash('Password reset not valid.', 'warning')
+        return redirect('/signin')
+    return (render_template('core/resetpassword.html', hash=hash))
+
+
 @mod.route('/create-folder')
 def createFolder():
     action = DB()
@@ -387,6 +414,28 @@ def registerAction():
         action.voidHash(hash)
         signinAction(email, password)
     return redirect('/')
+
+@mod.route('/reset-password-action', methods=['POST'])
+def resetPasswordAction():
+    if request.method == 'POST':
+        action = DB()
+        newPassword = request.form['inputNewPassword']
+        confirmNewPassword = request.form['confirmNewPassword']
+        hash = request.form['inputHash']
+        if not action.checkPasswordResetHash(hash):
+            flash('Password reset is no longer valid', 'danger')
+            return redirect('/')
+        if newPassword != confirmNewPassword:
+            flash('Passwords don\'t match', 'danger')
+            return render_template('core/register.html')
+        if len(newPassword) < 6:
+            flash('Password too short', 'danger')
+            return render_template('core/register.html')
+        action.resetPassword(newPassword, hash)
+        email = action.getUserEmailByUserId(action.getUserIdByPasswordHash(hash))
+        flash('Password has been successfully updated.', 'success')
+        # signinAction(email, newPassword)
+    return redirect('/signin')
 
 
 

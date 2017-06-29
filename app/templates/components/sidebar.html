@@ -28,6 +28,7 @@
     <!--<li><a href="">Another nav item</a></li>-->
     <hr>
       <li {% if active=='generateRegister' %} class="active" {% endif %}><a href="/generate-register">Generate Register URL</a></li>
+      <li {% if active=='generatePasswordReset' %} class="active" {% endif %}><a href="/generate-reset-password">Reset User Password</a></li>
       <li {% if active=='uploadImages' %} class="active" {% endif %}><a href="/uploadimages">Upload Images</a></li>
       <li {% if active=='userList' %} class="active" {% endif %}><a href="/user-list">User List</a></li>
   </ul>
