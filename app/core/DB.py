@@ -335,6 +335,7 @@ class DB(object):
 
     def createPasswordResetToken(self, email):
         m = hashlib.md5()
+        m.update(email)
         user_id = self.getUserIdByEmail(email)
         old_password = self.getUserPasswordByEmail(email)
         hash = m.hexdigest()

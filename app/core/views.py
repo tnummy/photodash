@@ -269,9 +269,9 @@ def generatePasswordReset():
 @mod.route('/generate-reset-password-action', methods=['POST'])
 def generatePasswordResetAction():
     if request.method == 'POST':
-        string = request.form['inputEmail']
+        email = request.form['inputEmail']
         action = DB()
-        hash = action.createPasswordResetToken(string)
+        hash = action.createPasswordResetToken(email)
         flash('photos.timnummyphotography.com/reset-password/' + hash, 'success')
     return render_template('core/generateresetpassword.html')
 
