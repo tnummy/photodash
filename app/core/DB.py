@@ -69,6 +69,14 @@ class DB(object):
         results = cursor.fetchone()
         return results
 
+    def getUserEmailByUserId(self, user_id):
+        query = "SELECT email FROM users u WHERE u.user_id = %s"
+        values = (user_id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results
+
     def getUserList(self):
         query = "SELECT user_id, first, last, email, password, created FROM users u WHERE u.admin = 0 AND u.deleted = 0"
         cursor = self.getCursor()
@@ -86,6 +94,22 @@ class DB(object):
     def getUserIdByEmail(self, email):
         query = "SELECT user_id FROM users u WHERE u.email = %s"
         values = (email,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results[0]
+
+    def getUserPasswordByEmail(self, email):
+        query = "SELECT password FROM users u WHERE u.email = %s"
+        values = (email,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results[0]
+
+    def getUserIdByPasswordHash(self, hash):
+        query = "SELECT user_id FROM password_reset_tokens prt WHERE prt.token = %s"
+        values = (hash,)
         cursor = self.getCursor()
         cursor.execute(query, values)
         results = cursor.fetchone()
@@ -309,9 +333,51 @@ class DB(object):
         db.commit()
         return hash
 
+    def createPasswordResetToken(self, email):
+        m = hashlib.md5()
+        m.update(email)
+        user_id = self.getUserIdByEmail(email)
+        old_password = self.getUserPasswordByEmail(email)
+        hash = m.hexdigest()
+        self.voidOldResetPasswordHash(hash)
+        query = ("INSERT INTO password_reset_tokens (user_id, old_password, token) \
+                      VALUES (%s, %s, %s)")
+        values = (user_id, old_password, hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+        return hash
+
     def voidHash(self, hash):
         query = "UPDATE access_tokens at SET at.used = 1 WHERE at.token = %s"
         values = (hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def voidResetPasswordHash(self, hash):
+        query = "UPDATE password_reset_tokens prt SET prt.used = 1 WHERE prt.token = %s"
+        values = (hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def voidOldResetPasswordHash(self, hash):
+        query = "UPDATE password_reset_tokens prt SET prt.used = 1 WHERE prt.token = %s"
+        values = (hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def resetPassword(self, newPassword, hash):
+        self.voidResetPasswordHash(hash)
+        user_id = self.getUserIdByPasswordHash(hash)
+        query = "UPDATE users u SET u.password = %s WHERE u.user_id = %s"
+        values = (newPassword, user_id)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
@@ -445,6 +511,14 @@ class DB(object):
 
     def checkHash(self, hash):
         query = "SELECT COUNT(*) FROM access_tokens at WHERE at.token = %s AND at.used = 0"
+        values = (hash,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def checkPasswordResetHash(self, hash):
+        query = "SELECT COUNT(*) FROM password_reset_tokens prt WHERE prt.token = %s AND prt.used = 0"
         values = (hash,)
         cursor = self.getCursor()
         cursor.execute(query, values)
