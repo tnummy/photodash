@@ -1,13 +1,8 @@
 version: 2
 jobs:
    build:
-     working_directory: ./
+     working_directory: ~/photodash
      docker:
        - image: circleci/python:2.7.13
      steps:
        - checkout
-       - run: echo "hello world"
-     test:
-       override:
-         - "true"
-         - echo "no tests"
