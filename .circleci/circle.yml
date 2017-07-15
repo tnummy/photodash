@@ -6,3 +6,4 @@ jobs:
        - image: circleci/python:2.7.13
      steps:
        - checkout
+       - run: pip install -r requirements.txt
