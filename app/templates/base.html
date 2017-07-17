@@ -35,4 +35,27 @@
 		<![endif]-->
 	  </head>
     {% block layout %}{% endblock %}
+<script>(function ($) {
+  $(document).ready(function(){
+
+    // hide .navbar first
+    // $(".navbar").hide();
+
+    // fade in .navbar
+    $(function () {
+        $(window).scroll(function () {
+
+                 // set distance user needs to scroll before we start fadeIn
+            if ($(window).width() < 998) {
+				if ($(this).scrollTop() < 100) {
+					$('.navbar').fadeIn();
+				} else {
+					$('.navbar').fadeOut();
+				}
+			}
+        });
+    });
+
+});
+  }(jQuery));</script>
 </html>

@@ -8,7 +8,7 @@
             {% elif not zoomImage and albumName %}
           <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{albumName}} <small>{% if active == 'deleted' %}(<a href="/empty-trash">empty trash</a>){% endif %}</small></h4>
           {% elif zoomImage and albumName %}
-          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small><a href="/album/{{active}}"> {{albumName}}</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{zoomImage[1]}}</h4>
+          <h4 class="page-header"><a href="/">Albums</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small><a href="/album/{{active}}#{{zoomImage[1]}}"> {{albumName}}</a> <small><i class="fa fa-chevron-right" aria-hidden="true"></i></small> {{zoomImage[1]}}</h4>
             {% endif %}
           <div class="row placeholders">
             {% if not hideFolders %}
@@ -102,12 +102,12 @@
             {% for image in images: %}
 
               <div class="col-xs-2 col-sm-4 col-md-2" style="height:185px; width:185px; padding:5px; margin-bottom:20px;">
+                <a id="{{image[1]}}"></a>
                 <div>
               <a href="/album/{{active}}/{{image[1]}}">
                 <img src="{{  url_for('static', filename=image[0] + '/thumb_' + image[1]  )}}" class="img-responsive"
               style="
               " alt="Image thumbnail"></a>
-
 </div>
                 {% if not image[5] %}
                 {% if showFeatureFlag %}
