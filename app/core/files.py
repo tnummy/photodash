@@ -18,9 +18,9 @@ class File(object):
         return [x[0].split('/')[-1] for x in os.walk(os.path.join(baseRoot, folder))][1:]
 
 
-    def saveImage(self, image, folder_id, user_id, user_folder, edited):
+    def saveImage(self, image, folder_id, user_id, edited):
         baseRoot = app.config['BASE_UPLOAD_FOLDER']
-        location = baseRoot + user_folder
+        location = baseRoot + str(user_id)
         # return os.walk(os.path.join(baseRoot, folder))[1]
         try:
             filename = image.filename.strip()
@@ -36,7 +36,7 @@ class File(object):
             imageObject = Image.open(image)
             width, height = imageObject.size
             resolution = '[' + str(height) + ' x ' + str(width) + ']'
-            action.addImage(filename, folder_id, user_id, 'storage/' + user_folder, resolution, possible_duplicate)
+            action.addImage(filename, folder_id, user_id, 'storage/' + str(user_id), resolution, possible_duplicate)
             if not action.checkHasFeatureImageByFolderId(folder_id):
                 action.setFeatureImageByFolderId(filename, folder_id)
             if edited:

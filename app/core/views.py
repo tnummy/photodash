@@ -22,7 +22,12 @@ mod = Blueprint('core', __name__)
 
 @app.context_processor
 def inject_stuff():
+    action = DB()
+    if session.get('id'):
+        folders = action.getFoldersByUserId(session['id'])
+        return {'now': datetime.utcnow(), 'tagCounts': 0, 'folders': folders}
     return {'now': datetime.utcnow(), 'tagCounts': 0}
+
 
 
 @mod.route('/')
@@ -31,7 +36,7 @@ def index(message=None, type='info'):
     if session.get('active'):
         repository = Repository()
         action = DB()
-        folders = action.getFoldersByUserId(session['id'])
+        # folders = action.getFoldersByUserId(session['id'])
         foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
         user_id = session['id']
         tagCounts = {}
@@ -40,7 +45,7 @@ def index(message=None, type='info'):
         tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
         tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
         tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
-        return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=session['folder'],folders=folders, foldersFeatures=foldersFeatures, active=False))
+        return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
     else:
         if message:
             flash(message, type)
@@ -104,7 +109,8 @@ def folder(user_id=None, album=None, image_id=None):
                         previousImage = False
                     else:
                         previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
-            return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, folders=session['folders'], images=images, active=active))
+
+            return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, images=images, active=active))
     return index('You must be signed in to see this page', 'warning')
 
 
@@ -218,7 +224,7 @@ def undelete():
 def uploadimages():
     action = DB()
     users = action.getUserWithFolderList()
-    return render_template('core/uploadimage.html', users=users, folders=session['folders'], active='uploadImages')
+    return render_template('core/uploadimage.html', users=users, active='uploadImages')
 
 @mod.route('/upload', methods=['POST'])
 def upload():
@@ -230,8 +236,8 @@ def upload():
                 if image_file and allowed_file(image_file.filename):
                     folder_id = request.form['inputFolder']
                     user_id = action.getUserIdByFolderId(folder_id)
-                    user_folder = action.getUserFolderByFolderId(folder_id)
-                    File().saveImage(image_file, folder_id, user_id, user_folder, request.form['inputEditTag'])
+                    # user_folder = action.getUserFolderByFolderId(folder_id)
+                    File().saveImage(image_file, folder_id, user_id, request.form['inputEditTag'])
             except Exception as e:
                 flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
     return redirect('/uploadimages')
@@ -248,7 +254,7 @@ def zipdir(path, ziph):
 
 @mod.route('/generate-register')
 def generateRegister():
-    return render_template('core/generate.html', active='generateRegister', folders=session['folders'])
+    return render_template('core/generate.html', active='generateRegister')
 
 
 @mod.route('/generate-register-action', methods=['POST'])
@@ -291,8 +297,8 @@ def resetPassword(hash=None):
 def createFolder():
     action = DB()
     users = action.getUserList()
-    session['folder'] = action.getFoldersByUserId(session['id'])
-    return render_template('core/createfolder.html', users=users, active='createFolder', folders=session['folders'])
+    # session['folder'] = action.getFoldersByUserId(session['id'])
+    return render_template('core/createfolder.html', users=users, active='createFolder')
 
 
 @mod.route('/empty-trash')
@@ -305,7 +311,7 @@ def emptyTrash():
 def userList():
     action = DB()
     users = action.getUserList()
-    return render_template('core/user-list.html', users=users, active='userList', folders=session['folders'], showpassword=request.args.get('password'))
+    return render_template('core/user-list.html', users=users, active='userList', showpassword=request.args.get('password'))
 
 
 @mod.route('/delete-user', methods=['POST'])
@@ -319,7 +325,7 @@ def deleteUser():
 
 @mod.route('/settings')
 def settings():
-    return render_template('core/settings.html', active='settings', folders=session['folders'])
+    return render_template('core/settings.html', active='settings')
 
 
 @mod.route('/create-folder-action', methods=['POST'])
@@ -356,7 +362,7 @@ def signinAction(email=None, password=None):
             session['first'] = user.first
             session['last'] = user.last
             session['email'] = user.email
-            session['folder'] = user.folder
+            # session['folder'] = user.folder
             user_id = action.getUserIdByEmail(email)
             session['folders'] = action.getFoldersByUserId(user_id)
             session['id'] = user_id
