@@ -38,7 +38,7 @@ class File(object):
             resolution = '[' + str(height) + ' x ' + str(width) + ']'
             action.addImage(filename, folder_id, user_id, 'storage/' + str(user_id), resolution, possible_duplicate)
             if not action.checkHasFeatureImageByFolderId(folder_id):
-                action.setFeatureImageByFolderId(filename, folder_id)
+                action.setFeatureImageByFolderId(user_id, filename, folder_id)
             if edited:
                 action.setEditedTagByImageId(filename, folder_id)
             maxsize = app.config['WEBVIEW_SIZE']
@@ -49,7 +49,7 @@ class File(object):
             imageObject.thumbnail(maxsize)
             thumbnailFilename = 'thumb_' + filename
             imageObject.save(os.path.join(location, thumbnailFilename))
-            # # return jsonify(url=session['url'])
+            # return jsonify(url=session['url'])
         except Exception as e:
              flash('Image was not saved: ' + e, 'danger')
 
