@@ -42,7 +42,7 @@ def index(message=None, type='info'):
         tagCounts = {}
         tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
         tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
-        tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
+        tagCounts['edited'] = action.getEditedImageCountByUserId(user_id)
         tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
         tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
         return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
