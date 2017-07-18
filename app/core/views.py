@@ -24,8 +24,15 @@ mod = Blueprint('core', __name__)
 def inject_stuff():
     action = DB()
     if session.get('id'):
+        user_id = session['id']
         folders = action.getFoldersByUserId(session['id'])
-        return {'now': datetime.utcnow(), 'tagCounts': 0, 'folders': folders}
+        tagCounts = {}
+        tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
+        tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
+        tagCounts['edited'] = action.getEditedImageCountByUserId(user_id)
+        tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
+        tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
+        return {'now': datetime.utcnow(), 'tagCounts': tagCounts, 'folders': folders}
     return {'now': datetime.utcnow(), 'tagCounts': 0}
 
 
@@ -36,16 +43,10 @@ def index(message=None, type='info'):
     if session.get('active'):
         repository = Repository()
         action = DB()
+        user_id = session['id']
         # folders = action.getFoldersByUserId(session['id'])
         foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
-        user_id = session['id']
-        tagCounts = {}
-        tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
-        tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
-        tagCounts['edited'] = action.getEditedImageCountByUserId(user_id)
-        tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
-        tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
-        return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
+        return (render_template('core/index.html', mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
     else:
         if message:
             flash(message, type)
@@ -70,12 +71,6 @@ def folder(user_id=None, album=None, image_id=None):
             showFeatureFlag = False
             if not image_id:
                 action.logAction(user_id, app.config['ACTIVITY_FOLDER_VIEW'], image_id=None, folder_id=album)
-            tagCounts = {}
-            tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
-            tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
-            tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
-            tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
-            tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
             if album == 'starred':
                 albumName = 'Starred'
                 images = action.getStarredImagesByUserID(user_id)
@@ -111,7 +106,7 @@ def folder(user_id=None, album=None, image_id=None):
                         else:
                             previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
 
-            return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, images=images, active=active))
+            return (render_template('core/index.html', showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, images=images, active=active))
     return index('You must be signed in to see this page', 'warning')
 
 
