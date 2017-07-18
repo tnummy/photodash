@@ -100,15 +100,16 @@ def folder(user_id=None, album=None, image_id=None):
                 zoomImage = action.getImageByImageAndUserId(image_id, user_id)
                 action.logAction(user_id, app.config['ACTIVITY_VIEW_ZOOMED'], image_id, album)
                 if images and zoomImage:
-                    imageLocation = images.index(zoomImage)
-                    if imageLocation == len(images) - 1:
-                        nextImage = False
-                    else:
-                        nextImage = action.getImageByImageAndUserId(images[imageLocation + 1][1], user_id)
-                    if imageLocation == 0:
-                        previousImage = False
-                    else:
-                        previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
+                    if zoomImage in images:
+                        imageLocation = images.index(zoomImage)
+                        if imageLocation == len(images) - 1:
+                            nextImage = False
+                        else:
+                            nextImage = action.getImageByImageAndUserId(images[imageLocation + 1][1], user_id)
+                        if imageLocation == 0:
+                            previousImage = False
+                        else:
+                            previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
 
             return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, images=images, active=active))
     return index('You must be signed in to see this page', 'warning')
