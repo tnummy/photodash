@@ -494,7 +494,7 @@ class DB(object):
         self.logAction(user_id, app.config['ACTIVITY_FLAGGED'], image_id=image_id, folder_id=folder_id)
         self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s AND i.user_id = %s"
-        values = (user_id, image_id, folder_id)
+        values = (image_id, folder_id, user_id)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
