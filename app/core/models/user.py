@@ -7,8 +7,8 @@ class User(object):
         self.last     = last
         self.email    = email
         self.password = password
-        self.folder   = email.split('@')[0]
-        self.setParentFolder(self.folder)
+        # self.folder   = email.split('@')[0]
+        # self.setParentFolder(self.folder)
         self.folders = self.setFolders(self.folder)
 
     def setParentFolder(self, folder):

@@ -21,6 +21,7 @@ class DB(object):
         cursor = db.cursor()
         cursor.execute(query, values)
         db.commit()
+        return cursor.lastrowid
 
     def addImage(self, image_id, folder_id, user_id, location, resolution, possible_duplicate):
         query = ("INSERT INTO images ( \
