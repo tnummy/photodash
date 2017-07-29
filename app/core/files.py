@@ -39,7 +39,7 @@ class File(object):
             action.addImage(filename, folder_id, user_id, 'storage/' + str(user_id), resolution, possible_duplicate)
             if not action.checkHasFeatureImageByFolderId(folder_id):
                 action.setFeatureImageByFolderId(user_id, filename, folder_id)
-            if edited:
+            if edited == '1':
                 action.setEditedTagByImageId(filename, folder_id)
             maxsize = app.config['WEBVIEW_SIZE']
             imageObject.thumbnail(maxsize)

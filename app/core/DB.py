@@ -502,7 +502,6 @@ class DB(object):
         db.commit()
 
     def setEditedTagByImageId(self, image_id, folder_id):
-        self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.edited = 1 WHERE i.image_id = %s AND i.folder_id = %s"
         values = (image_id, folder_id)
         db = mysql.get_db()
