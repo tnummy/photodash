@@ -20,8 +20,9 @@ class DB(object):
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
+        user_id = cursor.lastrowid
         db.commit()
-        return str(cursor.lastrowid())
+        return str(user_id)
 
     def addImage(self, image_id, folder_id, user_id, location, resolution, possible_duplicate):
         query = ("INSERT INTO images ( \
