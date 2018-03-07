@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    {% include "components/sidebar.html" %}
+    <div class="col-sm-1 col-md-3"></div>
+    <div class="col-sm-4 col-md-6">
+      <h4>Guests</h4>
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Last Login</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for guest in guests %}
+          <tr>
+            <td>{{guest[1]}} {{guest[2]}}</td>
+            <td>{{guest[3]}}</td>
+            <td>{{guest[4]}}</td>
+              <td>
+                <form action="/delete-guest" method="post">
+                <input type="hidden" name="inputGuestId" value="{{guest[0]}}">
+                <button type="submit" style="background:none!important;
+    border:none;
+    padding:0!important;float:left;margin-right:15px;"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+                </form>
+              </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

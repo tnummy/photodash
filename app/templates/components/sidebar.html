@@ -28,7 +28,7 @@
   <ul class="nav nav-sidebar">
     <hr>
     <li {% if active=='generateGuestRegister' %} class="active" {% endif %}><a href="/generate-guest-register"><i class="fa fa-user-plus" aria-hidden="true"></i> Generate Guest Register URL</a></li>
-    <li {% if active=='manageGuests' %} class="active" {% endif %}><a href="/generate-guest-register"><i class="fa fa-users" aria-hidden="true"></i> Manage Guests</a></li>
+    <li {% if active=='guestList' %} class="active" {% endif %}><a href="/manage-guests"><i class="fa fa-users" aria-hidden="true"></i> Manage Guests</a></li>
   </ul>
     {% endif %}
     {% if session['id'] == 1 %}

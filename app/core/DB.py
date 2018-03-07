@@ -134,6 +134,19 @@ class DB(object):
         results = cursor.fetchall()
         return results
 
+    def getGuestList(self, user_id):
+        query = "SELECT guest_id FROM guest_access ga WHERE ga.user_id = %s"
+        values = (user_id, )
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        guest_ids = cursor.fetchall()
+        query = "SELECT guest_id, first, last, email, created FROM guests g WHERE g.deleted = 0 AND g.guest_id IN %s"
+        values = (guest_ids, )
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchall()
+        return results
+
     def getUserWithFolderList(self):
         query = "SELECT u.user_id, u.first, u.last, f.folder_id, f.label FROM users u LEFT JOIN folders f ON f.user_id = u.user_id WHERE u.deleted = 0 AND f.folder_id IS NOT NULL"
         cursor = self.getCursor()
@@ -474,6 +487,14 @@ class DB(object):
     def deleteUserById(self, user_id):
         query = "UPDATE user u SET u.deleted = 1 WHERE u.user_id = %s"
         values = (user_id,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def deleteGuestById(self, guest_id):
+        query = "UPDATE guests g SET g.deleted = 1 WHERE g.guest_id = %s"
+        values = (guest_id,)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)

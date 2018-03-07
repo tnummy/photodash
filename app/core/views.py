@@ -46,7 +46,11 @@ def index(message=None, type='info'):
         action = DB()
         user_id = session['id']
         # folders = action.getFoldersByUserId(session['id'])
-        access_level_id = session['access_level_id']
+        if session.get('access_level_id'):
+            access_level_id = session['access_level_id']
+        else:
+            session['access_level_id'] = 1000
+            access_level_id = 1000
         if access_level_id == 3:
             return redirect('/album/public')
         foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
@@ -334,6 +338,14 @@ def userList():
     return render_template('core/user-list.html', users=users, active='userList', showpassword=request.args.get('password'))
 
 
+@mod.route('/manage-guests', methods=['GET'])
+def manageGuests():
+    action = DB()
+    user_id = session['id']
+    guests = action.getGuestList(user_id)
+    return render_template('core/manageguests.html', guests=guests, active='guestList')
+
+
 @mod.route('/delete-user', methods=['POST'])
 def deleteUser():
     if request.method == 'POST' and session.get('id') == 1:
@@ -341,6 +353,12 @@ def deleteUser():
         action.deleteUserById(request.form['inputUserId'])
         return redirect('/user-list')
 
+@mod.route('/delete-guest', methods=['POST'])
+def deleteGuest():
+    if request.method == 'POST':
+        action = DB()
+        action.deleteGuestById(request.form['inputGuestId'])
+        return redirect('/manage-guests')
 
 
 @mod.route('/settings')
