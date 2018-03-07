@@ -20,7 +20,9 @@ class DB(object):
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
+        user_id = cursor.lastrowid
         db.commit()
+        return str(user_id)
 
     def addImage(self, image_id, folder_id, user_id, location, resolution, possible_duplicate):
         query = ("INSERT INTO images ( \
@@ -214,7 +216,7 @@ class DB(object):
         return count[0]
 
     def getImagesByFolderId(self, id):
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.folder_id = %s AND deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.folder_id = %s AND deleted = 0 ORDER BY image_id"
         values = (id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -222,7 +224,7 @@ class DB(object):
         return results
 
     def getImageByImageAndUserId(self, image_id, user_id):
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.user_id = %s AND image_id = %s AND deleted = 0"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution, featured FROM images i WHERE i.user_id = %s AND image_id = %s AND deleted = 0"
         values = (user_id, image_id)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -230,7 +232,7 @@ class DB(object):
         return results
 
     def getFeatureImageByFolderId(self, id):
-        query = "SELECT location FROM images i WHERE i.folder_id = %s AND featured = 1"
+        query = "SELECT user_id FROM images i WHERE i.folder_id = %s AND featured = 1"
         values = (id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -239,7 +241,7 @@ class DB(object):
 
     def getStarredImagesByUserID(self, user_id):
         self.logAction(user_id, app.config['ACTIVITY_VIEW_STARRED'])
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND starred = 1 AND deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND starred = 1 AND deleted = 0 ORDER BY image_id"
         values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -248,7 +250,7 @@ class DB(object):
 
     def getToEditImagesByUserID(self, user_id):
         self.logAction(user_id, app.config['ACTIVITY_VIEW_TOEDIT'])
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND to_edit = 1 AND deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND to_edit = 1 AND deleted = 0 ORDER BY image_id"
         values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -257,7 +259,7 @@ class DB(object):
 
     def getEditedImagesByUserID(self, user_id):
         self.logAction(user_id, app.config['ACTIVITY_VIEW_EDITED'])
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND edited = 1 AND deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution FROM images i WHERE i.user_id = %s AND edited = 1 AND deleted = 0 ORDER BY image_id"
         values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -266,7 +268,7 @@ class DB(object):
 
     def getPublicImagesByUserID(self, user_id):
         self.logAction(user_id, app.config['ACTIVITY_VIEW_PUBLIC'])
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND public = 1 AND deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND public = 1 AND deleted = 0 ORDER BY image_id"
         values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -275,7 +277,7 @@ class DB(object):
 
     def getDeletedImagesByUserID(self, user_id):
         self.logAction(user_id, app.config['ACTIVITY_VIEW_DELETED'])
-        query = "SELECT location, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND deleted = 1 AND hard_deleted = 0 ORDER BY image_id"
+        query = "SELECT user_id, image_id, starred, to_edit, public, deleted, resolution  FROM images i WHERE i.user_id = %s AND deleted = 1 AND hard_deleted = 0 ORDER BY image_id"
         values = (user_id,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -493,15 +495,14 @@ class DB(object):
     def setFeatureImageByFolderId(self, user_id, image_id, folder_id):
         self.logAction(user_id, app.config['ACTIVITY_FLAGGED'], image_id=image_id, folder_id=folder_id)
         self.clearFeatureImageByFolderId(folder_id)
-        query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s"
-        values = (image_id, folder_id)
+        query = "UPDATE images i SET i.featured = 1 WHERE i.image_id = %s AND i.folder_id = %s AND i.user_id = %s"
+        values = (image_id, folder_id, user_id)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
         db.commit()
 
     def setEditedTagByImageId(self, image_id, folder_id):
-        self.clearFeatureImageByFolderId(folder_id)
         query = "UPDATE images i SET i.edited = 1 WHERE i.image_id = %s AND i.folder_id = %s"
         values = (image_id, folder_id)
         db = mysql.get_db()

@@ -8,10 +8,10 @@ Admin features
 
 User features
 - [ ] Password reset
-- [ ] Photo anchors
+- [x] Photo anchors
 - [ ] Add rotating
 - [ ] Prevent sizes from covering buttons
 
 Other Stuff
 - [x] Logging
-- [ ] Update upload folders to user id
+- [x] Update upload folders to user id

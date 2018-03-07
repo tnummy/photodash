@@ -22,7 +22,19 @@ mod = Blueprint('core', __name__)
 
 @app.context_processor
 def inject_stuff():
+    action = DB()
+    if session.get('id'):
+        user_id = session['id']
+        folders = action.getFoldersByUserId(session['id'])
+        tagCounts = {}
+        tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
+        tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
+        tagCounts['edited'] = action.getEditedImageCountByUserId(user_id)
+        tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
+        tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
+        return {'now': datetime.utcnow(), 'tagCounts': tagCounts, 'folders': folders}
     return {'now': datetime.utcnow(), 'tagCounts': 0}
+
 
 
 @mod.route('/')
@@ -31,16 +43,10 @@ def index(message=None, type='info'):
     if session.get('active'):
         repository = Repository()
         action = DB()
-        folders = action.getFoldersByUserId(session['id'])
-        foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
         user_id = session['id']
-        tagCounts = {}
-        tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
-        tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
-        tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
-        tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
-        tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
-        return (render_template('core/index.html', tagCounts=tagCounts, mainFolder=session['folder'],folders=folders, foldersFeatures=foldersFeatures, active=False))
+        # folders = action.getFoldersByUserId(session['id'])
+        foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
+        return (render_template('core/index.html', mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
     else:
         if message:
             flash(message, type)
@@ -65,12 +71,6 @@ def folder(user_id=None, album=None, image_id=None):
             showFeatureFlag = False
             if not image_id:
                 action.logAction(user_id, app.config['ACTIVITY_FOLDER_VIEW'], image_id=None, folder_id=album)
-            tagCounts = {}
-            tagCounts['starred'] = action.getStarredImageCountByUserId(user_id)
-            tagCounts['toedit'] = action.getToEditImageCountByUserId(user_id)
-            tagCounts['edited'] = action.getToEditImageCountByUserId(user_id)
-            tagCounts['public'] = action.getPublicImageCountByUserId(user_id)
-            tagCounts['deleted'] = action.getDeletedImageCountByUserId(user_id)
             if album == 'starred':
                 albumName = 'Starred'
                 images = action.getStarredImagesByUserID(user_id)
@@ -95,16 +95,18 @@ def folder(user_id=None, album=None, image_id=None):
                 zoomImage = action.getImageByImageAndUserId(image_id, user_id)
                 action.logAction(user_id, app.config['ACTIVITY_VIEW_ZOOMED'], image_id, album)
                 if images and zoomImage:
-                    imageLocation = images.index(zoomImage)
-                    if imageLocation == len(images) - 1:
-                        nextImage = False
-                    else:
-                        nextImage = action.getImageByImageAndUserId(images[imageLocation + 1][1], user_id)
-                    if imageLocation == 0:
-                        previousImage = False
-                    else:
-                        previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
-            return (render_template('core/index.html', tagCounts=tagCounts, showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, folders=session['folders'], images=images, active=active))
+                    if zoomImage in images:
+                        imageLocation = images.index(zoomImage)
+                        if imageLocation == len(images) - 1:
+                            nextImage = False
+                        else:
+                            nextImage = action.getImageByImageAndUserId(images[imageLocation + 1][1], user_id)
+                        if imageLocation == 0:
+                            previousImage = False
+                        else:
+                            previousImage = action.getImageByImageAndUserId(images[imageLocation - 1][1], user_id)
+
+            return (render_template('core/index.html', showFeatureFlag=showFeatureFlag, nextImage=nextImage, previousImage=previousImage, zoomImage=zoomImage, hideFolders=hideFolders, albumName=albumName, images=images, active=active))
     return index('You must be signed in to see this page', 'warning')
 
 
@@ -218,7 +220,7 @@ def undelete():
 def uploadimages():
     action = DB()
     users = action.getUserWithFolderList()
-    return render_template('core/uploadimage.html', users=users, folders=session['folders'], active='uploadImages')
+    return render_template('core/uploadimage.html', users=users, active='uploadImages')
 
 @mod.route('/upload', methods=['POST'])
 def upload():
@@ -230,8 +232,8 @@ def upload():
                 if image_file and allowed_file(image_file.filename):
                     folder_id = request.form['inputFolder']
                     user_id = action.getUserIdByFolderId(folder_id)
-                    user_folder = action.getUserFolderByFolderId(folder_id)
-                    File().saveImage(image_file, folder_id, user_id, user_folder, request.form['inputEditTag'])
+                    # user_folder = action.getUserFolderByFolderId(folder_id)
+                    File().saveImage(image_file, folder_id, user_id, request.form['inputEditTag'])
             except Exception as e:
                 flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
     return redirect('/uploadimages')
@@ -248,7 +250,7 @@ def zipdir(path, ziph):
 
 @mod.route('/generate-register')
 def generateRegister():
-    return render_template('core/generate.html', active='generateRegister', folders=session['folders'])
+    return render_template('core/generate.html', active='generateRegister')
 
 
 @mod.route('/generate-register-action', methods=['POST'])
@@ -291,8 +293,8 @@ def resetPassword(hash=None):
 def createFolder():
     action = DB()
     users = action.getUserList()
-    session['folder'] = action.getFoldersByUserId(session['id'])
-    return render_template('core/createfolder.html', users=users, active='createFolder', folders=session['folders'])
+    # session['folder'] = action.getFoldersByUserId(session['id'])
+    return render_template('core/createfolder.html', users=users, active='createFolder')
 
 
 @mod.route('/empty-trash')
@@ -305,7 +307,7 @@ def emptyTrash():
 def userList():
     action = DB()
     users = action.getUserList()
-    return render_template('core/user-list.html', users=users, active='userList', folders=session['folders'], showpassword=request.args.get('password'))
+    return render_template('core/user-list.html', users=users, active='userList', showpassword=request.args.get('password'))
 
 
 @mod.route('/delete-user', methods=['POST'])
@@ -319,7 +321,7 @@ def deleteUser():
 
 @mod.route('/settings')
 def settings():
-    return render_template('core/settings.html', active='settings', folders=session['folders'])
+    return render_template('core/settings.html', active='settings')
 
 
 @mod.route('/create-folder-action', methods=['POST'])
@@ -356,7 +358,7 @@ def signinAction(email=None, password=None):
             session['first'] = user.first
             session['last'] = user.last
             session['email'] = user.email
-            session['folder'] = user.folder
+            # session['folder'] = user.folder
             user_id = action.getUserIdByEmail(email)
             session['folders'] = action.getFoldersByUserId(user_id)
             session['id'] = user_id
@@ -410,7 +412,8 @@ def registerAction():
             flash('Password too short', 'danger')
             return render_template('core/register.html')
         registrant = User(first, last, email, password)
-        action.createUser(registrant)
+        user_id = action.createUser(registrant)
+        File().makeDirectory(user_id)
         action.voidHash(hash)
         signinAction(email, password)
     return redirect('/')

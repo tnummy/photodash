@@ -15,7 +15,7 @@
             {% for folder in foldersFeatures: %}
               <div class="col-xs-6 col-sm-3 placeholder">
                   <a href="/album/{{folder[0]}}">
-                    <img src="{{ url_for('static', filename='storage/' + mainFolder + '/' + folder[2] ) }}" width="200" height="200" class="img-responsive" alt="Album thumbnail">
+                    <img src="{{ url_for('static', filename='storage/' + mainFolder|string + '/' + folder[2] ) }}" width="200" height="200" class="img-responsive" alt="Album thumbnail">
                     <h4>{{ folder[1] }}</h4>
                 {% if session['id'] == 1%}
                   </a><a href=""><i class="fa fa-cog" aria-hidden="true"></i></a>
@@ -79,7 +79,7 @@
     padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa{% if zoomImage[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></h2></button>
                 </form>
                 {% if not zoomImage[5] %}
-                <a href="{{  url_for('static', filename=zoomImage[0] + '/' + zoomImage[1]  )}}" style="background:none!important;
+                <a href="{{  url_for('static', filename='storage/' + zoomImage[0]|string + '/' + zoomImage[1]  )}}" style="background:none!important;
     border:none;
     padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-download" aria-hidden="true"></i></h2></a>
                 {% endif %}
@@ -90,7 +90,7 @@
               {% endif %}
               </div>
              <div class="row">
-                <img src="{{  url_for('static', filename=zoomImage[0] + '/mid_' + zoomImage[1]  )}}" class="img-responsive"
+                <img src="{{  url_for('static', filename='storage/' + zoomImage[0]|string + '/mid_' + zoomImage[1]  )}}" class="img-responsive"
               style="
               " alt="Image thumbnail"></a>
 
@@ -105,7 +105,7 @@
                 <a id="{{image[1]}}"></a>
                 <div>
               <a href="/album/{{active}}/{{image[1]}}">
-                <img src="{{  url_for('static', filename=image[0] + '/thumb_' + image[1]  )}}" class="img-responsive"
+                <img src="{{  url_for('static', filename='storage/' + image[0]|string + '/thumb_' + image[1]  )}}" class="img-responsive"
               style="
               " alt="Image thumbnail"></a>
 </div>
@@ -154,7 +154,7 @@
     padding:0!important;float:left;margin-right:15px;"><i class="fa fa{% if image[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></button>
                 </form>
                 {% if not image[5] %}
-                <a href="{{  url_for('static', filename=image[0] + '/' + image[1]  )}}" style="background:none!important;
+                <a href="{{  url_for('static', filename='storage/' + image[0]|string + '/' + image[1]  )}}" style="background:none!important;
     border:none;
     padding:0!important;float:left;margin-right:15px;"><i class="fa fa-download" aria-hidden="true"></i></a>
                 {% endif %}
