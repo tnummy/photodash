@@ -33,6 +33,8 @@
     border:none;
     padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa-chevron-left" aria-hidden="true"></i></h2></a>
               {%endif%}
+
+                {% if session['access_level_id'] == 1%}
             {% if not zoomImage[5] %}
               {% if showFeatureFlag %}
                 <form action="/feature" method="post">
@@ -78,6 +80,8 @@
     border:none;
     padding:0!important;float:left;margin-right:15px;"><h2><i class="fa fa{% if zoomImage[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></h2></button>
                 </form>
+
+                {% endif %}
                 {% if not zoomImage[5] %}
                 <a href="{{  url_for('static', filename='storage/' + zoomImage[0]|string + '/' + zoomImage[1]  )}}" style="background:none!important;
     border:none;
@@ -109,6 +113,8 @@
               style="
               " alt="Image thumbnail"></a>
 </div>
+
+                {% if session['access_level_id'] == 1%}
                 {% if not image[5] %}
                 {% if showFeatureFlag %}
                 <form action="/feature" method="post">
@@ -153,6 +159,7 @@
     border:none;
     padding:0!important;float:left;margin-right:15px;"><i class="fa fa{% if image[5] %}-share{% else %}-trash-o{% endif %}" aria-hidden="true"></i></button>
                 </form>
+                {% endif %}
                 {% if not image[5] %}
                 <a href="{{  url_for('static', filename='storage/' + image[0]|string + '/' + image[1]  )}}" style="background:none!important;
     border:none;

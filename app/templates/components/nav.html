@@ -13,6 +13,7 @@
       <ul class="nav navbar-nav navbar-right">
         {% if session['active']: %}
         <li><a href="/profile">Hello, {{ session['first'] }}!</a></li>
+        {% if session['access_level_id'] <= 2%}
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Tags <span class="caret"></span></a>
           <ul class="dropdown-menu">
@@ -23,9 +24,12 @@
             <li><a href="/album/toedit">To Edit <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-square-o" aria-hidden="true"></i></a></li>
             <li><a href="/album/edited">Edited <i class="fa fa-pencil" aria-hidden="true"></i> <i class="fa fa-check-square-o" aria-hidden="true"></i></a></li>
             <li><a href="/album/public">Public <i class="fa fa-eye" aria-hidden="true"></i></a></li>
+            {% if session['access_level_id'] == 1%}
             <li><a href="/album/deleted">Deleted <i class="fa fa-trash-o" aria-hidden="true"></i></a></li>
+            {% endif %}
           </ul>
         </li>
+        {% endif %}
         {% if session['id'] == 1%}
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>

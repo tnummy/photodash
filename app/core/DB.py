@@ -24,6 +24,30 @@ class DB(object):
         db.commit()
         return str(user_id)
 
+    def createGuest(self, registrant):
+        query = ("INSERT INTO guests ( \
+                            first, \
+                            last, \
+                            email, \
+                            password) \
+                      VALUES (%s,%s,%s,%s)")
+        values = (registrant.first, registrant.last, registrant.email, registrant.password)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        guest_id = cursor.lastrowid
+        db.commit()
+        query = ("INSERT INTO guest_access ( \
+                            guest_id, \
+                            user_id, \
+                            access_level_id) \
+                      VALUES (%s,%s,%s)")
+        values = (guest_id, registrant.guest_of, registrant.access_level_id)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
     def addImage(self, image_id, folder_id, user_id, location, resolution, possible_duplicate):
         query = ("INSERT INTO images ( \
                             image_id, \
@@ -55,8 +79,16 @@ class DB(object):
         count = cursor.fetchone()
         return count[0]
 
-    def validateCreds(self, email, password):
-        query = "SELECT COUNT(*) FROM users u WHERE u.email = %s AND u.password = %s"
+    def validateUserCreds(self, email, password):
+        query = "SELECT COUNT(*) FROM users u WHERE u.email = %s AND u.password = %s AND u.deleted = 0"
+        values = (email, password)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def validateGuestCreds(self, email, password):
+        query = "SELECT COUNT(*) FROM guests g WHERE g.email = %s AND g.password = %s AND g.deleted = 0"
         values = (email, password)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -65,6 +97,22 @@ class DB(object):
 
     def getUserInfoByEmail(self, email):
         query = "SELECT first, last, email FROM users u WHERE u.email = %s"
+        values = (email,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results
+
+    def getGuestAccessUserByGuestID(self, id):
+        query = "SELECT ga.user_id, ga.access_level_id FROM guest_access ga WHERE ga.guest_id = %s LIMIT 1"
+        values = (id,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results
+
+    def getGuestInfoByEmail(self, email):
+        query = "SELECT g.first, g.last, g.email FROM guests g WHERE g.email = %s"
         values = (email,)
         cursor = self.getCursor()
         cursor.execute(query, values)
@@ -101,6 +149,14 @@ class DB(object):
         results = cursor.fetchone()
         return results[0]
 
+    def getGuestIdByEmail(self, email):
+        query = "SELECT guest_id FROM guests g WHERE g.email = %s"
+        values = (email,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results[0]
+
     def getUserPasswordByEmail(self, email):
         query = "SELECT password FROM users u WHERE u.email = %s"
         values = (email,)
@@ -116,6 +172,14 @@ class DB(object):
         cursor.execute(query, values)
         results = cursor.fetchone()
         return results[0]
+
+    def getNewGuestRegistrationInfoByHash(self, hash):
+        query = "SELECT email, user_id, access_level_id FROM guest_tokens gt WHERE gt.token = %s"
+        values = (hash,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        results = cursor.fetchone()
+        return results
 
     def getUserIdByFolderId(self, folder_id):
         query = "SELECT user_id FROM folders f WHERE f.folder_id = %s"
@@ -292,10 +356,10 @@ class DB(object):
         results = cursor.fetchone()
         return results
 
-    def recordLogin(self, user_id):
-        query = ("INSERT INTO login_history (user_id, login) \
-                      VALUES (%s, 1)")
-        values = (user_id,)
+    def recordLogin(self, user_id, guest_id=None):
+        query = ("INSERT INTO login_history (user_id, guest_id, login) \
+                      VALUES (%s, %s, 1)")
+        values = (user_id, guest_id)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
@@ -335,6 +399,20 @@ class DB(object):
         db.commit()
         return hash
 
+    def createGuestToken(self, email, user_id, access_level_id):
+        m = hashlib.md5()
+        string = email + str(user_id) + str(access_level_id)
+        m.update(string)
+        hash = m.hexdigest()
+        query = ("INSERT INTO guest_tokens (email, user_id, access_level_id, token) \
+                      VALUES (%s,%s,%s,%s)")
+        values = (email, user_id, access_level_id, hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+        return hash
+
     def createPasswordResetToken(self, email):
         m = hashlib.md5()
         m.update(email)
@@ -354,6 +432,14 @@ class DB(object):
     def voidHash(self, hash):
         query = "UPDATE access_tokens at SET at.used = 1 WHERE at.token = %s"
         values = (hash,)
+        db = mysql.get_db()
+        cursor = db.cursor()
+        cursor.execute(query, values)
+        db.commit()
+
+    def voidGuestHash(self, hash, guest_of):
+        query = "UPDATE guest_tokens gt SET gt.used = 1 WHERE gt.token = %s AND gt.user_id = %s"
+        values = (hash, guest_of)
         db = mysql.get_db()
         cursor = db.cursor()
         cursor.execute(query, values)
@@ -512,6 +598,14 @@ class DB(object):
 
     def checkHash(self, hash):
         query = "SELECT COUNT(*) FROM access_tokens at WHERE at.token = %s AND at.used = 0"
+        values = (hash,)
+        cursor = self.getCursor()
+        cursor.execute(query, values)
+        count = cursor.fetchone()
+        return count[0]
+
+    def checkGuestHash(self, hash):
+        query = "SELECT COUNT(*) FROM guest_tokens gt WHERE gt.token = %s AND gt.used = 0"
         values = (hash,)
         cursor = self.getCursor()
         cursor.execute(query, values)

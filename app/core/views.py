@@ -2,6 +2,7 @@ from flask import Blueprint, request, render_template, flash, g, session, redire
                   abort, jsonify
 from app.core.repository import *
 from app.core.models.user import User
+from app.core.models.guest import Guest
 from app.core.DB import DB
 from app import *
 from app.core.files import File
@@ -45,6 +46,9 @@ def index(message=None, type='info'):
         action = DB()
         user_id = session['id']
         # folders = action.getFoldersByUserId(session['id'])
+        access_level_id = session['access_level_id']
+        if access_level_id == 3:
+            return redirect('/album/public')
         foldersFeatures = action.getFoldersByUserIdWithFeatureImage(session['id'])
         return (render_template('core/index.html', mainFolder=user_id, foldersFeatures=foldersFeatures, active=False))
     else:
@@ -60,6 +64,9 @@ def index(message=None, type='info'):
 def folder(user_id=None, album=None, image_id=None):
     if session.get('active'):
         action = DB()
+        access_level_id = session['access_level_id']
+        if access_level_id == 3:
+            album = 'public'
         if album:
             user_id = session['id']
             hideFolders = True
@@ -253,6 +260,11 @@ def generateRegister():
     return render_template('core/generate.html', active='generateRegister')
 
 
+@mod.route('/generate-guest-register')
+def generateGuestRegister():
+    return render_template('core/generateguest.html', active='generateGuestRegister')
+
+
 @mod.route('/generate-register-action', methods=['POST'])
 def generateRegisterAction():
     if request.method == 'POST':
@@ -261,6 +273,18 @@ def generateRegisterAction():
         hash = action.createToken(string)
         flash('photos.timnummyphotography.com/register/' + hash, 'success')
     return render_template('core/generate.html')
+
+
+@mod.route('/generate-guest-register-action', methods=['POST'])
+def generateGuestRegisterAction():
+    if request.method == 'POST':
+        email = request.form['inputEmail']
+        access_level_id = request.form['inputAccessLevelId']
+        user_id = session['id']
+        action = DB()
+        hash = action.createGuestToken(email, user_id, access_level_id)
+        flash('photos.timnummyphotography.com/register/guest/' + hash, 'success')
+    return render_template('core/generateguest.html')
 
 
 @mod.route('/generate-reset-password')
@@ -351,7 +375,7 @@ def signinAction(email=None, password=None):
         action = DB()
         email = request.form['inputEmail']
         password = request.form['inputPassword']
-        if action.validateCreds(email, password):
+        if action.validateUserCreds(email, password):
             session['active'] = True
             userInfo = action.getUserInfoByEmail(email)
             user = User(userInfo[0], userInfo[1], userInfo[2])
@@ -362,7 +386,23 @@ def signinAction(email=None, password=None):
             user_id = action.getUserIdByEmail(email)
             session['folders'] = action.getFoldersByUserId(user_id)
             session['id'] = user_id
+            session['access_level_id'] = 1
             action.recordLogin(user_id)
+        elif action.validateGuestCreds(email, password):
+            session['active'] = True
+            guest_info = action.getGuestInfoByEmail(email)
+            guest_id = action.getGuestIdByEmail(email)
+            guest_access_info = action.getGuestAccessUserByGuestID(guest_id)
+            guest = Guest(guest_info[0], guest_info[1], guest_info[2], guest_access_info[0], guest_access_info[1])
+            session['first'] = guest.first
+            session['last'] = guest.last
+            session['email'] = guest.email
+            session['guest_of'] = guest.guest_of
+            session['access_level_id'] = guest.access_level_id
+            # session['folder'] = user.folder
+            session['folders'] = action.getFoldersByUserId(guest.guest_of)
+            session['id'] = guest.guest_of
+            action.recordLogin(guest.guest_of, guest_id)
         else:
             flash('Email and password don\'t match', 'danger')
             return render_template('core/signin.html')
@@ -387,6 +427,21 @@ def register(hash=None):
         flash('Open registration isn\'t allowed. Please contact Tim for a register link', 'info')
         return redirect('/signin')
     return (render_template('core/register.html', hash=hash))
+
+
+@mod.route('/register/guest/<hash>')
+def registerGuest(hash=None):
+    if session.get('active'):
+        return redirect('/')
+    if not hash:
+        flash('Open registration isn\'t allowed. Please contact Tim for a register link', 'info')
+        return redirect('/signin')
+    action = DB()
+    new_guest_info = action.getNewGuestRegistrationInfoByHash(hash)
+    ng_email = new_guest_info[0]
+    ng_of = new_guest_info[1]
+    ng_access_level_id = new_guest_info[2]
+    return (render_template('core/registerguest.html', hash=hash, ng_email=ng_email, ng_of=ng_of, ng_access_level_id=ng_access_level_id))
 
 
 @mod.route('/register-action', methods=['POST'])
@@ -415,6 +470,37 @@ def registerAction():
         user_id = action.createUser(registrant)
         File().makeDirectory(user_id)
         action.voidHash(hash)
+        signinAction(email, password)
+    return redirect('/')
+
+
+@mod.route('/register-guest-action', methods=['POST'])
+def registerGuestAction():
+    if request.method == 'POST':
+        action = DB()
+        first = request.form['inputFirstName']
+        last = request.form['inputLastName']
+        email = request.form['inputEmail']
+        password = request.form['inputPassword']
+        confirmPassword = request.form['confirmPassword']
+        hash = request.form['inputHash']
+        guest_of = request.form['inputGuestOfId']
+        access_level_id = request.form['inputAccessLevelId']
+        if not action.checkGuestHash(hash) or not guest_of or not access_level_id:
+            flash('Register link is no longer valid', 'danger')
+            return render_template('core/register.html')
+        if action.checkUserExists(email):
+            flash('Email already used. Did you mean to log in?', 'danger')
+            return render_template('core/register.html')
+        if password != confirmPassword:
+            flash('Passwords don\'t match', 'danger')
+            return render_template('core/register.html')
+        if len(password) < 6:
+            flash('Password too short', 'danger')
+            return render_template('core/register.html')
+        registrant = Guest(first, last, email, guest_of, access_level_id, password)
+        action.createGuest(registrant)
+        action.voidGuestHash(hash, guest_of)
         signinAction(email, password)
     return redirect('/')
 
