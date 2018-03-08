@@ -3,6 +3,7 @@
     {% if folderid %}
     <form class="form-signin" action="/guestupload" method="post" enctype="multipart/form-data">
         </br>
+        <h4>Uploading to "{{ foldername }}"</h4>
         <input type="hidden" name="inputFolder" id="inputFolder" class="form-control" value="{{ folderid }}" required>
         </br>
           <label for="inputFolder">Add Edit Tag:</label>

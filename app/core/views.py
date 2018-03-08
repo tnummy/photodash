@@ -275,7 +275,9 @@ def guestUploadImages(folderhash=None):
     if not folderhash:
         flash('Invalid upload url.', 'info')
     folderid = folderhash
-    return render_template('core/guestuploadimage.html', folderid=folderid)
+    action = DB()
+    foldername = action.getFoldersLabelByID(short_url.decode_url(folderid))
+    return render_template('core/guestuploadimage.html', folderid=folderid, foldername=foldername)
 
 # @mod.route('/guestupload', methods=['POST'])
 # def guestUpload():
