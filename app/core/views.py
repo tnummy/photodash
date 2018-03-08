@@ -262,9 +262,11 @@ def guestUpload():
                     user_id = action.getUserIdByFolderId(folder_id)
                     # user_folder = action.getUserFolderByFolderId(folder_id)
                     File().saveImage(image_file, folder_id, user_id, request.form['inputEditTag'])
-                    return redirect('/guestuploadimages/' + short_url.encode(folder_id))
+                    hash = short_url.encode_url(folder_id)
+                    flash('Images uploaded successfully.', 'success')
+                    return redirect('/guestuploadimages/' + str(hash))
             except Exception as e:
-                flash(e, 'danger')
+                flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
         return redirect('/guestuploadimages')
 
 @mod.route('/guestuploadimages')
