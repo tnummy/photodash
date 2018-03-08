@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block layout %}
+    <body>
+        <div class="container-fluid">
+            <header>
+                {% include "components/nav.html" %}
+            </header>
+            <div class="row">
+                {% block flashes %}
+                {% with messages = get_flashed_messages(with_categories=true)  %}
+                {% if messages %}
+                    <div class="col-md-5"></div>
+                    <div class="flashes col-md-2">
+                    {% for category, message in messages %}
+                      <!--<a class="close" data-dismiss="alert">&times;</a>-->
+                      <div class="alert alert-{{category}}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+                {% endblock %}
+            </div>
+            <article>
+                {% block body %}{% endblock %}
+            </article>
+            <footer>
+                {% include "components/footer.html" %}
+            </footer>
+        </div>
+    </body>
+{% endblock %}

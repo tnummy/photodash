@@ -1,0 +1,21 @@
+<div class="col-sm-3 col-md-4"></div>
+<div class="col-sm-6 col-md-4">
+    {% if folderid %}
+    <form class="form-signin" action="/guestupload" method="post" enctype="multipart/form-data">
+        </br>
+        <input type="hidden" name="inputFolder" id="inputFolder" class="form-control" value="{{ folderid }}" required>
+        </br>
+          <label for="inputFolder">Add Edit Tag:</label>
+          <select class="form-control" id="inputEditTag" name="inputEditTag">
+            <option>select</option>
+                <option value="0">Raw</option>
+                <option value="1">Edited</option>
+          </select>
+        </br>
+        <input type="file" name="images" id="images" class="form-control" required autofocus multiple>
+        </br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Upload</button>
+        </br>
+    </form>
+    {% endif %}
+</div>

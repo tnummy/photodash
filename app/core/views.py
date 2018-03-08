@@ -8,6 +8,7 @@ from app import *
 from app.core.files import File
 from functools import wraps
 from datetime import datetime
+import short_url
 
 import requests
 
@@ -248,6 +249,58 @@ def upload():
             except Exception as e:
                 flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
     return redirect('/uploadimages')
+
+@mod.route('/guestupload', methods=['POST'])
+def guestUpload():
+    if request.method == 'POST':
+        image_files = request.files.getlist('images')
+        for image_file in image_files:
+            try:
+                action = DB()
+                if image_file and allowed_file(image_file.filename):
+                    folder_id = short_url.decode_url(request.form['inputFolder'])
+                    user_id = action.getUserIdByFolderId(folder_id)
+                    # user_folder = action.getUserFolderByFolderId(folder_id)
+                    File().saveImage(image_file, folder_id, user_id, request.form['inputEditTag'])
+                    return redirect('/guestuploadimages/' + short_url.encode(folder_id))
+            except Exception as e:
+                flash(e, 'danger')
+        return redirect('/guestuploadimages')
+
+@mod.route('/guestuploadimages')
+@mod.route('/guestuploadimages/<folderhash>')
+def guestUploadImages(folderhash=None):
+    if not folderhash:
+        flash('Invalid upload url.', 'info')
+    folderid = folderhash
+    return render_template('core/guestuploadimage.html', folderid=folderid)
+
+# @mod.route('/guestupload', methods=['POST'])
+# def guestUpload():
+#     if request.method == 'POST':
+#         image_files = request.files.getlist('images')
+#         for image_file in image_files:
+#             try:
+#                 action = DB()
+#                 if image_file and allowed_file(image_file.filename):
+#                     folder_id = request.form['inputFolder']
+#                     user_id = action.getUserIdByFolderId(folder_id)
+#                     # user_folder = action.getUserFolderByFolderId(folder_id)
+#                     File().saveImage(image_file, folder_id, user_id, request.form['inputEditTag'])
+#             except Exception as e:
+#                 flash(image_file.filename + ' is an invalid file type. ' + e, 'danger')
+#     return redirect('/uploadimages')
+
+@mod.route('/generate-guest-photo-upload', methods=['GET'])
+@mod.route('/generate-guest-photo-upload/<folderid>', methods=['GET'])
+def generateGuestPhotoUploadRegisterAction(folderid=None):
+    if request.method == 'GET':
+        if folderid:
+            hash = short_url.encode_url(int(folderid))
+            flash('photos.timnummyphotography.com/guestuploadimages/' + hash, 'success')
+        else:
+            flash('Folder ID needed', 'info')
+    return render_template('core/generateguestphotoupload.html', active='generateGuestPhotoUpload')
 
 def allowed_file(filename):
     return '.' in filename and \
